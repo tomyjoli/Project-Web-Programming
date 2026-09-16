@@ -1,0 +1,55 @@
+CREATE TABLE USER (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE INGREDIENT (
+    ingredient_id INT AUTO_INCREMENT PRIMARY KEY,
+    ingredient_name VARCHAR(100) NOT NULL,
+    alcohol_degree FLOAT DEFAULT 0.0,
+    category_name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE RECIPE (
+    recipe_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    description TEXT,
+    photo_url VARCHAR(255),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
+    glass_name VARCHAR(50) NOT NULL,
+    capacity_cl INT NOT NULL
+);
+
+CREATE TABLE RECIPE_INGREDIENT (
+    recipe_id INT NOT NULL,
+    ingredient_id INT NOT NULL,
+    quantity DECIMAL(5,2) NOT NULL,
+    unit_of_measure VARCHAR(20) NOT NULL,
+    PRIMARY KEY (recipe_id, ingredient_id),
+    FOREIGN KEY (recipe_id) REFERENCES RECIPE(recipe_id) ON DELETE CASCADE,
+    FOREIGN KEY (ingredient_id) REFERENCES INGREDIENT(ingredient_id)
+);
+
+CREATE TABLE PREPARATION_STEP (
+    step_id INT AUTO_INCREMENT PRIMARY KEY,
+    recipe_id INT NOT NULL,
+    step_number INT NOT NULL,
+    instruction TEXT NOT NULL,
+    FOREIGN KEY (recipe_id) REFERENCES RECIPE(recipe_id) ON DELETE CASCADE
+);
+
+CREATE TABLE REVIEW (
+    review_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    recipe_id INT NOT NULL,
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (recipe_id) REFERENCES RECIPE(recipe_id) ON DELETE CASCADE
+);
