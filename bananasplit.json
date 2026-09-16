@@ -1,0 +1,201 @@
+{
+  "users": [
+    {
+      "user_id": 1,
+      "username": "Antonin",
+      "email": "antonin@example.com",
+      "password": "password123"
+    },
+    {
+      "user_id": 2,
+      "username": "Tom",
+      "email": "tom@example.com",
+      "password": "password123"
+    },
+    {
+      "user_id": 3,
+      "username": "Delphine",
+      "email": "delphine@example.com",
+      "password": "password123"
+    },
+    {
+      "user_id": 4,
+      "username": "Eliot",
+      "email": "eliot@example.com",
+      "password": "password123"
+    },
+    {
+      "user_id": 5,
+      "username": "Olivier",
+      "email": "olivier@example.com",
+      "password": "password123"
+    }
+  ],
+  "ingredients": [
+    {
+      "ingredient_id": 1,
+      "ingredient_name": "Vodka",
+      "alcohol_degree": 40.0,
+      "category_name": "Alcohol"
+    },
+    {
+      "ingredient_id": 2,
+      "ingredient_name": "White rum",
+      "alcohol_degree": 37.5,
+      "category_name": "Alcohol"
+    },
+    {
+      "ingredient_id": 3,
+      "ingredient_name": "Pineapple juice",
+      "alcohol_degree": 0.0,
+      "category_name": "Juice"
+    },
+    {
+      "ingredient_id": 4,
+      "ingredient_name": "Grenadine",
+      "alcohol_degree": 0.0,
+      "category_name": "Syrup"
+    },
+    {
+      "ingredient_id": 5,
+      "ingredient_name": "Lime juice",
+      "alcohol_degree": 0.0,
+      "category_name": "Juice"
+    }
+  ],
+  "recipes": [
+    {
+      "recipe_id": 1,
+      "user_id": 1,
+      "title": "Pineapple Vodka",
+      "description": "A fresh cocktail combining vodka, pineapple and lime.",
+      "photo_url": "https://example.com/pineapple-vodka.jpg",
+      "glass_name": "Highball",
+      "capacity_cl": 30
+    },
+    {
+      "recipe_id": 2,
+      "user_id": 2,
+      "title": "Rum Sunrise",
+      "description": "A fruity rum cocktail with pineapple and grenadine.",
+      "photo_url": "https://example.com/rum-sunrise.jpg",
+      "glass_name": "Hurricane",
+      "capacity_cl": 30
+    },
+    {
+      "recipe_id": 3,
+      "user_id": 3,
+      "title": "Lime Grenadine Fizz",
+      "description": "A bright vodka cocktail with lime and grenadine.",
+      "photo_url": "https://example.com/lime-grenadine-fizz.jpg",
+      "glass_name": "Tumbler",
+      "capacity_cl": 25
+    },
+    {
+      "recipe_id": 4,
+      "user_id": 4,
+      "title": "Tropical Rum Cooler",
+      "description": "A refreshing blend of white rum, pineapple and lime.",
+      "photo_url": "https://example.com/tropical-rum-cooler.jpg",
+      "glass_name": "Collins",
+      "capacity_cl": 35
+    },
+    {
+      "recipe_id": 5,
+      "user_id": 5,
+      "title": "Five Ingredient Punch",
+      "description": "A balanced punch made with all five available ingredients.",
+      "photo_url": "https://example.com/five-ingredient-punch.jpg",
+      "glass_name": "Punch glass",
+      "capacity_cl": 40
+    }
+  ],
+  "recipe_ingredients": [
+    { "recipe_id": 1, "ingredient_id": 1, "quantity": 4.0, "unit_of_measure": "cl" },
+    { "recipe_id": 1, "ingredient_id": 3, "quantity": 12.0, "unit_of_measure": "cl" },
+    { "recipe_id": 1, "ingredient_id": 5, "quantity": 2.0, "unit_of_measure": "cl" },
+    { "recipe_id": 2, "ingredient_id": 2, "quantity": 5.0, "unit_of_measure": "cl" },
+    { "recipe_id": 2, "ingredient_id": 3, "quantity": 12.0, "unit_of_measure": "cl" },
+    { "recipe_id": 2, "ingredient_id": 4, "quantity": 1.0, "unit_of_measure": "cl" },
+    { "recipe_id": 3, "ingredient_id": 1, "quantity": 4.0, "unit_of_measure": "cl" },
+    { "recipe_id": 3, "ingredient_id": 5, "quantity": 3.0, "unit_of_measure": "cl" },
+    { "recipe_id": 3, "ingredient_id": 4, "quantity": 1.0, "unit_of_measure": "cl" },
+    { "recipe_id": 4, "ingredient_id": 2, "quantity": 5.0, "unit_of_measure": "cl" },
+    { "recipe_id": 4, "ingredient_id": 3, "quantity": 15.0, "unit_of_measure": "cl" },
+    { "recipe_id": 4, "ingredient_id": 5, "quantity": 2.0, "unit_of_measure": "cl" },
+    { "recipe_id": 5, "ingredient_id": 1, "quantity": 3.0, "unit_of_measure": "cl" },
+    { "recipe_id": 5, "ingredient_id": 2, "quantity": 3.0, "unit_of_measure": "cl" },
+    { "recipe_id": 5, "ingredient_id": 3, "quantity": 15.0, "unit_of_measure": "cl" },
+    { "recipe_id": 5, "ingredient_id": 4, "quantity": 1.0, "unit_of_measure": "cl" },
+    { "recipe_id": 5, "ingredient_id": 5, "quantity": 2.0, "unit_of_measure": "cl" }
+  ],
+  "preparation_steps": [
+    {
+      "step_id": 1,
+      "recipe_id": 1,
+      "step_number": 1,
+      "instruction": "Shake the vodka, pineapple juice and lime juice with ice, then strain into the glass."
+    },
+    {
+      "step_id": 2,
+      "recipe_id": 2,
+      "step_number": 1,
+      "instruction": "Shake the white rum and pineapple juice with ice, then add grenadine before serving."
+    },
+    {
+      "step_id": 3,
+      "recipe_id": 3,
+      "step_number": 1,
+      "instruction": "Shake the vodka and lime juice with ice, then pour over ice and add grenadine."
+    },
+    {
+      "step_id": 4,
+      "recipe_id": 4,
+      "step_number": 1,
+      "instruction": "Fill the glass with ice, add the white rum and pineapple juice, then finish with lime juice."
+    },
+    {
+      "step_id": 5,
+      "recipe_id": 5,
+      "step_number": 1,
+      "instruction": "Shake the vodka, white rum, pineapple juice and lime juice with ice, then add grenadine."
+    }
+  ],
+  "reviews": [
+    {
+      "review_id": 1,
+      "user_id": 2,
+      "recipe_id": 1,
+      "rating": 5,
+      "comment": "Fresh, fruity and well balanced."
+    },
+    {
+      "review_id": 2,
+      "user_id": 3,
+      "recipe_id": 2,
+      "rating": 4,
+      "comment": "The pineapple and grenadine work very well together."
+    },
+    {
+      "review_id": 3,
+      "user_id": 4,
+      "recipe_id": 3,
+      "rating": 4,
+      "comment": "A bright cocktail with a pleasant lime taste."
+    },
+    {
+      "review_id": 4,
+      "user_id": 5,
+      "recipe_id": 4,
+      "rating": 5,
+      "comment": "Very refreshing and easy to drink."
+    },
+    {
+      "review_id": 5,
+      "user_id": 1,
+      "recipe_id": 5,
+      "rating": 5,
+      "comment": "A complete and fruity punch with a nice citrus finish."
+    }
+  ]
+}
