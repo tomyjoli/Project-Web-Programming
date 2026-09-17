@@ -8,6 +8,9 @@ DROP TABLE IF EXISTS USER;
 CREATE TABLE USER (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
+    bio TEXT,
+    date_of_birth DATE,
+    profile_picture_url VARCHAR(255),
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -17,6 +20,10 @@ CREATE TABLE INGREDIENT (
     ingredient_id INT AUTO_INCREMENT PRIMARY KEY,
     ingredient_name VARCHAR(100) NOT NULL,
     alcohol_degree FLOAT DEFAULT 0.0,
+    allergens VARCHAR(100),
+    average_price DECIMAL(5,2),
+    image_url VARCHAR(255),
+    is_legal BOOLEAN DEFAULT TRUE,
     category_name VARCHAR(50) NOT NULL
 );
 
@@ -26,6 +33,7 @@ CREATE TABLE RECIPE (
     title VARCHAR(100) NOT NULL,
     description TEXT,
     photo_url VARCHAR(255),
+    preparation_time INT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
     glass_name VARCHAR(50) NOT NULL,
@@ -57,6 +65,8 @@ CREATE TABLE REVIEW (
     rating INT CHECK (rating BETWEEN 1 AND 5),
     comment TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    Upvote BOOLEAN DEFAULT FALSE,
+    Downvote BOOLEAN DEFAULT FALSE,
     FOREIGN KEY (user_id) REFERENCES USER(user_id) ON DELETE CASCADE,
     FOREIGN KEY (recipe_id) REFERENCES RECIPE(recipe_id) ON DELETE CASCADE
 );
