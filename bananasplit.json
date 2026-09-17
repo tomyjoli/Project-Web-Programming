@@ -3,30 +3,45 @@
     {
       "user_id": 1,
       "username": "Antonin",
+      "bio" : "I love drinking",
+      "date_of_birth":"2008-03-22",
+      "profile_picture_url":"https://example.com/profiles/antonin.jpg",
       "email": "antonin@example.com",
       "password": "password123"
     },
     {
       "user_id": 2,
       "username": "Tom",
+      "bio" : "I eat a lot",
+      "date_of_birth":"2006-04-12",
+      "profile_picture_url":"https://example.com/profiles/tom.jpg",
       "email": "tom@example.com",
       "password": "password123"
     },
     {
       "user_id": 3,
       "username": "Delphine",
+      "bio" : "Hello, hello",
+      "date_of_birth":"2006-04-30",
+      "profile_picture_url":"https://example.com/profiles/delphi.jpg",
       "email": "delphine@example.com",
       "password": "password123"
     },
     {
       "user_id": 4,
       "username": "Eliot",
+      "bio" : "I love bike",
+      "date_of_birth":"2006-06-12",
+      "profile_picture_url":"https://example.com/profiles/eliot.jpg",
       "email": "eliot@example.com",
       "password": "password123"
     },
     {
       "user_id": 5,
       "username": "Olivier",
+      "bio" : "I am not at home",
+      "date_of_birth":"2006-04-12",
+      "profile_picture_url":"https://example.com/profiles/olivier.jpg",
       "email": "olivier@example.com",
       "password": "password123"
     }
@@ -36,40 +51,61 @@
       "ingredient_id": 1,
       "ingredient_name": "Vodka",
       "alcohol_degree": 40.0,
+      "allergens": null,
+      "average_price": 15.99,
+      "image_url":"https://example.com/ingredients/vodka.jpg",
+      "is_legal":true,
       "category_name": "Alcohol"
     },
     {
       "ingredient_id": 2,
       "ingredient_name": "White rum",
       "alcohol_degree": 37.5,
+      "allergens": null,
+      "average_price": 18.50,
+      "image_url":"https://example.com/ingredients/whiru.jpg",
+      "is_legal":true,
       "category_name": "Alcohol"
     },
     {
       "ingredient_id": 3,
       "ingredient_name": "Pineapple juice",
       "alcohol_degree": 0.0,
+      "allergens": null,
+      "average_price": 2.50,
+      "image_url":"https://example.com/ingredients/pinea.jpg",
+      "is_legal":true,
       "category_name": "Juice"
     },
     {
       "ingredient_id": 4,
       "ingredient_name": "Grenadine",
       "alcohol_degree": 0.0,
+      "allergens": null,
+      "average_price": 3.20,
+      "image_url":"https://example.com/ingredients/grena.jpg",
+      "is_legal":true,
       "category_name": "Syrup"
     },
     {
       "ingredient_id": 5,
       "ingredient_name": "Lime juice",
       "alcohol_degree": 0.0,
+      "allergens": null,
+      "average_price": 1.80,
+      "image_url":"https://example.com/ingredients/lime.jpg",
+      "is_legal":true,
       "category_name": "Juice"
     }
   ],
-  "recipes": [
+  "recipe": [
     {
       "recipe_id": 1,
       "user_id": 1,
       "title": "Pineapple Vodka",
       "description": "A fresh cocktail combining vodka, pineapple and lime.",
       "photo_url": "https://example.com/pineapple-vodka.jpg",
+      "preparation_time" :300,
       "glass_name": "Highball",
       "capacity_cl": 30
     },
@@ -79,6 +115,7 @@
       "title": "Rum Sunrise",
       "description": "A fruity rum cocktail with pineapple and grenadine.",
       "photo_url": "https://example.com/rum-sunrise.jpg",
+      "preparation_time" :420,
       "glass_name": "Hurricane",
       "capacity_cl": 30
     },
@@ -88,6 +125,7 @@
       "title": "Lime Grenadine Fizz",
       "description": "A bright vodka cocktail with lime and grenadine.",
       "photo_url": "https://example.com/lime-grenadine-fizz.jpg",
+      "preparation_time" :300,
       "glass_name": "Tumbler",
       "capacity_cl": 25
     },
@@ -97,6 +135,7 @@
       "title": "Tropical Rum Cooler",
       "description": "A refreshing blend of white rum, pineapple and lime.",
       "photo_url": "https://example.com/tropical-rum-cooler.jpg",
+      "preparation_time" :480,
       "glass_name": "Collins",
       "capacity_cl": 35
     },
@@ -106,6 +145,7 @@
       "title": "Five Ingredient Punch",
       "description": "A balanced punch made with all five available ingredients.",
       "photo_url": "https://example.com/five-ingredient-punch.jpg",
+      "preparation_time" :900,
       "glass_name": "Punch glass",
       "capacity_cl": 40
     }
@@ -167,35 +207,45 @@
       "user_id": 2,
       "recipe_id": 1,
       "rating": 5,
-      "comment": "Fresh, fruity and well balanced."
+      "comment": "Fresh, fruity and well balanced.",
+      "upvote":false,
+      "downvote":false
     },
     {
       "review_id": 2,
       "user_id": 3,
       "recipe_id": 2,
       "rating": 4,
-      "comment": "The pineapple and grenadine work very well together."
+      "comment": "The pineapple and grenadine work very well together.",
+      "upvote":false,
+      "downvote":false
     },
     {
       "review_id": 3,
       "user_id": 4,
       "recipe_id": 3,
       "rating": 4,
-      "comment": "A bright cocktail with a pleasant lime taste."
+      "comment": "A bright cocktail with a pleasant lime taste.",
+      "upvote":false,
+      "downvote":false
     },
     {
       "review_id": 4,
       "user_id": 5,
       "recipe_id": 4,
       "rating": 5,
-      "comment": "Very refreshing and easy to drink."
+      "comment": "Very refreshing and easy to drink.",
+      "upvote":false,
+      "downvote":false
     },
     {
       "review_id": 5,
       "user_id": 1,
       "recipe_id": 5,
       "rating": 5,
-      "comment": "A complete and fruity punch with a nice citrus finish."
+      "comment": "A complete and fruity punch with a nice citrus finish.",
+      "upvote":false,
+      "downvote":false
     }
   ]
 }
