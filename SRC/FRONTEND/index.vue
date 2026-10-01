@@ -87,7 +87,7 @@ const recipeImages = {
   5: fiveIngredientPunchImage,
 }
 
-const recipes = cocktailData.recipes.map((recipe) => {
+const recipes = cocktailData.recipe.map((recipe) => {
   const author = cocktailData.users.find((user) => user.user_id === recipe.user_id)
   const recipeIngredients = cocktailData.recipe_ingredients
     .filter((item) => item.recipe_id === recipe.recipe_id)
