@@ -1,186 +1,161 @@
 <template>
-  <main class="page-shell">
+  <main class="site-shell">
     <header class="topbar">
       <a class="brand" href="#top" aria-label="Banana Split, home">
-        <span class="brand-mark">BS</span>
+        <svg class="brand-logo" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+          <path d="M6 18C6 18 10 28 22 28C28 28 32 24 32 24C32 24 26 25 20 23C13 20.5 9 13 8 8C8 8 6 13 6 18Z" fill="#ffc83b" stroke="#2c1b15" stroke-width="2.5" stroke-linejoin="round" />
+          <path d="M12 11C12 11 16 7 24 9" stroke="#e76532" stroke-width="2.5" stroke-linecap="round" />
+          <circle cx="25" cy="8" r="3" fill="#e76532" stroke="#2c1b15" stroke-width="1.5" />
+        </svg>
         <span>Banana Split</span>
       </a>
       <nav class="navigation" aria-label="Main navigation">
-        <a class="active" href="#discover">Discover</a>
-        <a href="#popular">Popular</a>
-        <a href="#share">Share a recipe</a>
+        <a class="active" href="#top">Home</a>
+        <a href="#search">Search</a>
+        <a href="#trending">Trending</a>
       </nav>
-      <button class="profile-button" type="button" aria-label="Open profile">TG</button>
+      <button class="profile-button" type="button">Se connecter</button>
     </header>
 
     <section id="top" class="hero-section">
       <div class="hero-copy">
-        <p class="eyebrow">Your bar, your rules</p>
-        <h1>The right cocktail starts with what you already have.</h1>
-        <p class="hero-description">
-          Find a recipe, improvise with your ingredients and share your best creations.
-        </p>
-        <form class="search-bar" @submit.prevent="searchRecipes">
-          <span class="search-icon" aria-hidden="true">⌕</span>
-          <input v-model="searchQuery" type="search" placeholder="E.g. rum, lemon, mint..." aria-label="Search recipes" />
-          <button type="submit">Search</button>
-        </form>
-        <div class="quick-searches" aria-label="Quick searches">
-          <span>Try:</span>
-          <button v-for="suggestion in suggestions" :key="suggestion" type="button" @click="searchQuery = suggestion; searchRecipes()">
-            {{ suggestion }}
-          </button>
-        </div>
+        <p class="eyebrow">Cocktails made personal</p>
+        <h1>Your next favorite drink is already in your kitchen.</h1>
+        <p class="hero-text">Tell us what you have. We will turn it into a recipe worth sharing.</p>
       </div>
-      <div class="hero-visual" aria-label="Fresh cocktail served in a glass">
-        <div class="sun-disc"></div>
-        <div class="fruit fruit-one">🍊</div>
-        <div class="fruit fruit-two">🍋</div>
-        <div class="glass-shadow"></div>
-        <div class="cocktail-glass">
-          <div class="drink"></div>
-          <div class="ice ice-one"></div>
-          <div class="ice ice-two"></div>
-          <div class="straw"></div>
-          <div class="garnish">🍒</div>
-        </div>
-        <p class="visual-note">Fresh, simple, homemade.</p>
-      </div>
+      <video class="hero-video" autoplay muted loop playsinline aria-label="Cocktail video background">
+        <source :src="cocktailVideo" type="video/mp4" />
+      </video>
     </section>
 
-    <section id="discover" class="content-section">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Set the mood</p>
-          <h2>What are you mixing today?</h2>
-        </div>
-        <a href="#popular" class="text-link">View all recipes <span aria-hidden="true">→</span></a>
-      </div>
-      <div class="mood-grid">
-        <button v-for="mood in moods" :key="mood.label" class="mood-card" :class="mood.className" type="button" @click="searchQuery = mood.search; searchRecipes()">
-          <span class="mood-icon">{{ mood.icon }}</span>
-          <span class="mood-label">{{ mood.label }}</span>
-          <span class="mood-count">{{ mood.count }} recipes</span>
-        </button>
-      </div>
+    <section id="search" class="search-section">
+      <div class="section-label">Find your next pour</div>
+      <h2>Search a cocktail</h2>
+      <p>Look through the recipes from our community and find the right drink for what you have at home.</p>
+      <label class="search-bar" for="recipe-search">
+        <span aria-hidden="true">⌕</span>
+        <input id="recipe-search" v-model="searchQuery" type="search" placeholder="Search by cocktail, ingredient or author" />
+        <button v-if="searchQuery" type="button" aria-label="Clear search" @click="searchQuery = ''">Clear</button>
+      </label>
     </section>
 
-    <section id="popular" class="content-section recipes-section">
+    <section id="trending" class="trending-section">
       <div class="section-heading">
         <div>
-          <p class="eyebrow">Community favorites</p>
-          <h2>What people are sipping</h2>
+          <div class="section-label">Made by the community</div>
+          <h2>Drinks of the moment</h2>
         </div>
-        <button class="filter-button" type="button" @click="showEasyOnly = !showEasyOnly">
-          {{ showEasyOnly ? 'All recipes' : 'Easy recipes' }} <span aria-hidden="true">⌄</span>
-        </button>
+        <span class="recipe-count">{{ filteredRecipes.length }} recipes</span>
       </div>
-      <div class="recipe-grid">
-        <article v-for="recipe in filteredRecipes" :key="recipe.name" class="recipe-card">
-          <div class="recipe-image" :class="recipe.colorClass"><span>{{ recipe.emoji }}</span><span class="rating">★ {{ recipe.rating }}</span></div>
-          <div class="recipe-details">
-            <div class="recipe-meta"><span>{{ recipe.type }}</span><span>{{ recipe.time }}</span></div>
-            <h3>{{ recipe.name }}</h3>
+      <div v-if="filteredRecipes.length" class="recipe-grid">
+        <article v-for="recipe in filteredRecipes" :key="recipe.recipe_id" class="recipe-card">
+          <div class="recipe-art">
+            <img class="recipe-photo" :src="recipe.image" :alt="recipe.title" />
+            <span class="recipe-rating">{{ recipe.rating }}/5</span>
+          </div>
+          <div class="recipe-body">
+            <div class="recipe-meta"><span>Cocktail</span><span>By {{ recipe.author }}</span></div>
+            <h3>{{ recipe.title }}</h3>
             <p>{{ recipe.description }}</p>
-            <div class="recipe-footer"><span>{{ recipe.author }}</span><button type="button" aria-label="Add to favorites">♡</button></div>
+            <div class="recipe-specs"><span>{{ recipe.glass_name }}</span><span>{{ recipe.capacity_cl }} cl</span></div>
+            <div class="recipe-ingredients">{{ recipe.ingredients.join(' · ') }}</div>
           </div>
         </article>
       </div>
-      <p v-if="filteredRecipes.length === 0" class="empty-state">No recipes match your search.</p>
+      <p v-else class="empty-state">No cocktail matches your search.</p>
     </section>
 
-    <section id="share" class="share-banner">
-      <div>
-        <p class="eyebrow">Your turn</p>
-        <h2>Have a mix you are proud of?</h2>
-        <p>Publish your recipe and inspire the next happy hour.</p>
-      </div>
-      <button class="primary-button" type="button">Share a recipe <span aria-hidden="true">↗</span></button>
-    </section>
-
-    <footer class="footer"><span>Banana Split © 2024</span><span>Made for the curious and the good times.</span></footer>
   </main>
 </template>
 
 <script setup>
 import { computed, ref } from 'vue'
+import cocktailData from '../../bananasplit.json'
+import cocktailVideo from '../Images/4K Free Stock Footage Halloween Cocktail in Dark Bar with Dramatic Red Light.mp4'
+import fiveIngredientPunchImage from '../Images/Five_Ingredient_Punch.jpg'
+import limeGrenadineFizzImage from '../Images/lime_grenadine_fizz.jpg'
+import pineappleVodkaImage from '../Images/pineapple_vodka.jpg'
+import rumSunriseImage from '../Images/rum_sunrise.jpg'
+import tropicalRumCoolerImage from '../Images/Tropical_Rum_Cooler.jpg'
 
 const searchQuery = ref('')
-const showEasyOnly = ref(false)
-const suggestions = ['Mojito', 'Virgin', 'Pineapple']
+const recipeImages = {
+  1: pineappleVodkaImage,
+  2: rumSunriseImage,
+  3: limeGrenadineFizzImage,
+  4: tropicalRumCoolerImage,
+  5: fiveIngredientPunchImage,
+}
 
-const moods = [
-  { label: 'Fresh & fruity', count: 48, icon: '✦', className: 'mood-mint', search: 'fruit' },
-  { label: 'Sweet & smooth', count: 32, icon: '◒', className: 'mood-peach', search: 'sweet' },
-  { label: 'Zero-proof', count: 27, icon: '◌', className: 'mood-lilac', search: 'virgin' },
-  { label: 'Quick to make', count: 19, icon: 'ϟ', className: 'mood-yellow', search: 'quick' },
-]
+const recipes = cocktailData.recipes.map((recipe) => {
+  const author = cocktailData.users.find((user) => user.user_id === recipe.user_id)
+  const recipeIngredients = cocktailData.recipe_ingredients
+    .filter((item) => item.recipe_id === recipe.recipe_id)
+    .map((item) => cocktailData.ingredients.find((ingredient) => ingredient.ingredient_id === item.ingredient_id)?.ingredient_name)
+    .filter(Boolean)
+  const reviews = cocktailData.reviews.filter((review) => review.recipe_id === recipe.recipe_id)
+  const rating = reviews.length ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length : 0
 
-const recipes = [
-  { name: 'Sunset Passion', type: 'Fruity', time: '5 min', rating: '4.9', author: 'Lea M.', emoji: '🍹', colorClass: 'image-coral', description: 'A sunny balance of passion fruit and citrus.', easy: true },
-  { name: 'Green Garden', type: 'Fresh', time: '8 min', rating: '4.8', author: 'Nicolas R.', emoji: '🥒', colorClass: 'image-green', description: 'Cucumber, basil and lime for a little reset.', easy: true },
-  { name: 'Velvet Berry', type: 'Smooth', time: '10 min', rating: '4.7', author: 'Sarah K.', emoji: '🍓', colorClass: 'image-berry', description: 'Bright berries finished with a touch of vanilla.', easy: false },
-]
+  return { ...recipe, author: author?.username ?? 'Community', ingredients: recipeIngredients, rating: rating.toFixed(1), image: recipeImages[recipe.recipe_id] }
+})
 
 const filteredRecipes = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
-  return recipes.filter((recipe) => {
-    const matchesQuery = !query || `${recipe.name} ${recipe.type} ${recipe.description}`.toLowerCase().includes(query)
-    return matchesQuery && (!showEasyOnly.value || recipe.easy)
-  })
+  if (!query) return recipes
+  return recipes.filter((recipe) => `${recipe.title} ${recipe.description} ${recipe.author} ${recipe.ingredients.join(' ')}`.toLowerCase().includes(query))
 })
-
-function searchRecipes() {
-  document.querySelector('#popular')?.scrollIntoView({ behavior: 'smooth' })
-}
 </script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
+:root { --ink: #2c1b15; --muted: #806b61; --paper: #fff6ed; --line: #f0d4c1; --orange: #e76532; --orange-bright: #f28a42; --gold: #ffc83b; --cream: #fffaf5; }
+* { box-sizing: border-box; } html { scroll-behavior: smooth; } body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans-serif; } button, input { font: inherit; }
+.site-shell { max-width: 1180px; margin: 0 auto; padding: 0 30px; overflow: visible; }.topbar { height: 84px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--line); }.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-family: 'Playfair Display', serif; font-size: 21px; text-decoration: none; }.brand-logo { width: 34px; height: 34px; }.navigation { display: flex; gap: 28px; }.navigation a { color: var(--muted); font-size: 12px; text-decoration: none; }.navigation a:hover, .navigation a.active { color: var(--orange); font-weight: 700; }.profile-button { padding: 10px 16px; border: 2px solid var(--ink); border-radius: 12px; background: rgb(255, 197, 0); color: var(--ink); cursor: pointer; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.hero-section { display: grid; grid-template-columns: 1.05fr .95fr; min-height: 500px; align-items: center; gap: 50px; padding: 72px 0 55px; }.eyebrow { margin: 0 0 14px; color: var(--orange); font-size: 11px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }.hero-copy h1 { max-width: 620px; margin: 0 0 23px; font-family: 'Playfair Display', serif; font-size: clamp(44px, 5.2vw, 72px); letter-spacing: -.05em; line-height: .96; text-shadow: 3px 3px 0 #ffd3a4; }.hero-text { max-width: 420px; color: var(--muted); font-size: 15px; line-height: 1.65; }.search-bar { display: flex; max-width: 535px; align-items: center; gap: 8px; margin-top: 27px; padding: 7px; border: 3px solid var(--ink); border-radius: 18px; background: white; box-shadow: 5px 6px 0 var(--orange-bright); }.search-bar input { width: 100%; min-width: 0; border: 0; outline: 0; padding: 10px; color: var(--ink); font-size: 13px; }.search-bar button, .dark-button { border: 0; border-radius: 12px; background: var(--ink); color: white; cursor: pointer; font-size: 12px; font-weight: 800; white-space: nowrap; }.search-bar button { padding: 14px 18px; }.search-note { margin-top: 15px; color: var(--muted); font-size: 11px; }.search-note button { margin-left: 7px; border: 0; border-bottom: 2px solid var(--orange); background: transparent; color: var(--orange); cursor: pointer; font-size: 11px; font-weight: 700; }
+.hero-art { position: relative; height: 370px; }.art-sun { position: absolute; top: 18px; right: 5%; width: 290px; height: 290px; border: 5px solid var(--ink); border-radius: 45% 55% 50% 50%; background: #ffd38a; transform: rotate(8deg); box-shadow: 10px 10px 0 #f5a06e; }.art-glass { position: absolute; top: 62px; left: 50%; width: 175px; height: 260px; overflow: visible; border: 5px solid var(--ink); border-top: 0; border-radius: 8px 8px 80px 80px; transform: translateX(-50%) rotate(4deg); }.art-drink { position: absolute; right: 4px; bottom: 5px; left: 4px; height: 175px; border-radius: 0 0 72px 72px; background: linear-gradient(#ffc15b, #e95832); }.art-ice { position: absolute; width: 38px; height: 38px; border: 2px solid rgba(44,27,21,.35); border-radius: 8px; background: rgba(255,255,255,.3); transform: rotate(20deg); }.ice-left { top: 65px; left: 30px; }.ice-right { top: 100px; right: 28px; transform: rotate(-14deg); }.art-straw { position: absolute; top: -48px; right: 45px; width: 6px; height: 112px; border: 2px solid var(--ink); background: var(--orange); transform: rotate(16deg); }.art-orange { position: absolute; right: 1%; bottom: 28px; width: 54px; height: 54px; border: 4px solid var(--ink); border-radius: 50%; background: #ffad4d; }.art-orange::after { position: absolute; top: 22px; left: 7px; width: 32px; height: 3px; background: var(--ink); content: ''; transform: rotate(45deg); }.art-bubble { position: absolute; border: 3px solid var(--ink); border-radius: 50%; background: var(--orange); }.bubble-one { top: 26px; left: 8%; width: 19px; height: 19px; }.bubble-two { right: 0; bottom: 120px; width: 13px; height: 13px; background: var(--gold); }.hero-art p { position: absolute; right: 3%; bottom: 0; color: var(--muted); font-size: 11px; font-style: italic; }
+.section-block { padding: 74px 0; }.ingredients-section { display: grid; grid-template-columns: .8fr 1.2fr; gap: 70px; border-top: 2px solid var(--line); }.section-intro h2, .section-heading h2, .community-copy h2 { margin: 0 0 17px; font-family: 'Playfair Display', serif; font-size: 36px; letter-spacing: -.04em; line-height: 1.05; }.section-intro > p:last-child { max-width: 330px; color: var(--muted); font-size: 13px; line-height: 1.6; }.ingredient-panel { display: flex; align-content: start; flex-wrap: wrap; gap: 12px; padding: 25px; border: 3px solid var(--ink); border-radius: 20px; background: #ffd8a5; box-shadow: 7px 8px 0 var(--orange); }.ingredient-chip { display: flex; align-items: center; gap: 9px; padding: 12px 14px; border: 2px solid var(--ink); border-radius: 12px; background: var(--cream); color: var(--ink); cursor: pointer; font-size: 12px; font-weight: 700; }.chip-dot { width: 12px; height: 12px; border: 2px solid var(--ink); border-radius: 50%; }.dot-yellow { background: #ffd34f; }.dot-gold { background: #f2a338; }.dot-green { background: #9cbc6b; }.dot-orange { background: var(--orange); }.dot-red { background: #dc5f42; }.dot-pink { background: #e98c91; }.chip-plus { margin-left: 5px; color: var(--orange); font-size: 18px; line-height: 10px; }.ingredient-more { width: 100%; margin-top: 16px; border: 0; background: transparent; color: var(--orange); cursor: pointer; font-size: 12px; font-weight: 800; text-align: left; }
+.section-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 25px; }.filter-button { padding: 11px 14px; border: 2px solid var(--ink); border-radius: 11px; background: var(--gold); color: var(--ink); cursor: pointer; font-size: 11px; font-weight: 800; }.recipe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }.recipe-card { overflow: hidden; border: 3px solid var(--ink); border-radius: 18px; background: var(--cream); box-shadow: 5px 6px 0 #f5a06e; transition: transform .2s; }.recipe-card:hover { transform: translateY(-5px) rotate(.5deg); }.recipe-art { position: relative; display: grid; height: 195px; place-items: center; overflow: hidden; }.art-coral { background: #ffad70; }.art-yellow { background: #ffc970; }.art-peach { background: #f28f6d; }.recipe-shape { display: block; width: 98px; height: 130px; border: 5px solid var(--ink); border-radius: 12px 12px 38px 38px; background: linear-gradient(#ffd477 0 23%, #ed663c 23%); box-shadow: 7px 8px 0 rgba(44,27,21,.22); transform: rotate(-5deg); }.shape-round { border-radius: 50% 50% 22px 22px; background: linear-gradient(#ffe29b 0 20%, #f28a42 20%); transform: rotate(5deg); }.shape-wide { width: 116px; height: 105px; border-radius: 35px 35px 14px 14px; background: linear-gradient(#ffc56d 0 20%, #e76532 20%); transform: rotate(-3deg); }.recipe-rating { position: absolute; top: 13px; right: 13px; padding: 6px 8px; border: 2px solid var(--ink); border-radius: 9px; background: var(--cream); font-size: 10px; font-weight: 800; }.recipe-body { padding: 18px; }.recipe-meta { display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--orange); font-size: 10px; font-weight: 800; text-transform: uppercase; }.recipe-meta span:last-child { color: var(--muted); text-transform: none; }.recipe-body h3 { margin: 0 0 7px; font-family: 'Playfair Display', serif; font-size: 22px; }.recipe-body p { min-height: 37px; margin: 0 0 17px; color: var(--muted); font-size: 12px; line-height: 1.45; }.recipe-bottom { display: flex; align-items: center; justify-content: space-between; border-top: 2px solid var(--line); padding-top: 12px; color: var(--muted); font-size: 10px; }.recipe-bottom button { padding: 7px 10px; border: 2px solid var(--ink); border-radius: 8px; background: #ffd38a; color: var(--ink); cursor: pointer; font-size: 10px; font-weight: 800; }.empty-state { padding: 30px; color: var(--muted); text-align: center; }
+.community-section { display: grid; grid-template-columns: 1fr .9fr; gap: 55px; align-items: center; margin: 25px 0 55px; padding: 42px; border: 3px solid var(--ink); border-radius: 22px; background: var(--orange); box-shadow: 8px 9px 0 var(--ink); }.community-copy h2 { max-width: 500px; color: white; font-size: 38px; }.community-copy > p:not(.eyebrow) { max-width: 430px; color: #fff0df; font-size: 13px; line-height: 1.6; }.dark-button { margin-top: 12px; padding: 14px 18px; }.community-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }.community-stats div { padding: 18px 10px; border: 2px solid var(--ink); border-radius: 13px; background: #ffd38a; text-align: center; }.community-stats strong, .community-stats span { display: block; }.community-stats strong { font-family: 'Playfair Display', serif; font-size: 28px; }.community-stats span { margin-top: 6px; color: var(--muted); font-size: 10px; }.footer { display: flex; justify-content: space-between; border-top: 2px solid var(--line); padding: 23px 0 28px; color: var(--muted); font-size: 10px; }
 
-:root { --ink: #2c1b15; --muted: #806b61; --paper: #fff8f1; --line: #f0ddd0; --lime: #ffd38a; --coral: #e76532; --orange: #f28a42; }
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'DM Sans', sans-serif; }
-button, input { font: inherit; }
-button, a { -webkit-tap-highlight-color: transparent; }
-.page-shell { max-width: 1280px; margin: 0 auto; padding: 0 42px; overflow: hidden; }
-.topbar { height: 86px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
-.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 700; text-decoration: none; letter-spacing: -.03em; }
-.brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; background: var(--coral); color: #fff8f1; font-size: 11px; letter-spacing: 0; }
-.navigation { display: flex; gap: 33px; margin-left: 100px; }
-.navigation a { position: relative; color: var(--muted); text-decoration: none; font-size: 13px; }
-.navigation a.active, .navigation a:hover { color: var(--ink); }
-.navigation a.active::after { position: absolute; right: 0; bottom: -11px; left: 0; height: 2px; background: var(--coral); content: ''; }
-.profile-button { width: 34px; height: 34px; border: 0; border-radius: 50%; background: #ffe0bd; color: #a34825; font-size: 11px; font-weight: 700; }
-.hero-section { display: grid; grid-template-columns: 1fr .9fr; min-height: 475px; align-items: center; gap: 40px; padding: 64px 0 52px; }
-.eyebrow { margin: 0 0 13px; color: var(--coral); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-h1, h2, h3, p { margin-top: 0; } h1, h2 { font-family: 'Playfair Display', serif; letter-spacing: -.045em; }
-h1 { max-width: 610px; margin-bottom: 20px; font-size: clamp(45px, 5vw, 72px); line-height: .98; }
-.hero-description { max-width: 405px; margin-bottom: 29px; color: var(--muted); font-size: 15px; line-height: 1.65; }
-.search-bar { display: flex; max-width: 520px; align-items: center; padding: 5px 6px 5px 16px; border: 1px solid var(--line); border-radius: 6px; background: white; box-shadow: 0 12px 32px rgba(55, 65, 46, .06); }
-.search-icon { margin-right: 9px; color: var(--coral); font-size: 25px; line-height: 1; transform: rotate(-20deg); }
-.search-bar input { width: 100%; border: 0; outline: 0; color: var(--ink); font-size: 13px; }
-.search-bar button, .primary-button { border: 0; border-radius: 4px; background: var(--ink); color: white; cursor: pointer; font-size: 12px; font-weight: 700; white-space: nowrap; }
-.search-bar button { padding: 13px 18px; }
-.quick-searches { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 13px; color: var(--muted); font-size: 11px; }
-.quick-searches button { padding: 0; border: 0; border-bottom: 1px solid #b8beb4; background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; }
-.hero-visual { position: relative; height: 375px; }
-.sun-disc { position: absolute; top: 12px; right: 6%; width: 285px; height: 285px; border-radius: 50%; background: #ffe2b6; }
-.cocktail-glass { position: absolute; top: 56px; left: 50%; width: 175px; height: 270px; border: 4px solid rgba(255, 255, 255, .72); border-top: 0; border-radius: 5px 5px 80px 80px; transform: translateX(-50%) rotate(5deg); overflow: visible; box-shadow: 5px 11px 20px rgba(92, 105, 72, .1); }
-.drink { position: absolute; right: 3px; bottom: 5px; left: 3px; height: 183px; border-radius: 0 0 76px 76px; background: linear-gradient(135deg, #ffc15b, #e95832); }
-.ice { position: absolute; width: 38px; height: 38px; border: 1px solid rgba(255, 255, 255, .45); border-radius: 8px; background: rgba(255, 237, 191, .35); transform: rotate(22deg); }
-.ice-one { top: 68px; left: 35px; }.ice-two { top: 97px; right: 33px; transform: rotate(-15deg); }.straw { position: absolute; top: -41px; right: 50px; width: 5px; height: 112px; background: var(--coral); transform: rotate(18deg); }.garnish { position: absolute; top: -53px; right: -18px; font-size: 32px; transform: rotate(12deg); }.glass-shadow { position: absolute; bottom: 40px; left: 50%; width: 245px; height: 24px; border-radius: 50%; background: rgba(87, 100, 64, .13); filter: blur(9px); transform: translateX(-50%); }.fruit { position: absolute; z-index: 2; font-size: 53px; }.fruit-one { right: 2%; bottom: 48px; transform: rotate(-18deg); }.fruit-two { bottom: 7px; left: 15%; font-size: 40px; transform: rotate(22deg); }.visual-note { position: absolute; right: 3%; bottom: 0; color: var(--muted); font-size: 11px; font-style: italic; }
-.content-section { padding: 44px 0; }.section-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 25px; }h2 { margin-bottom: 0; font-size: 31px; line-height: 1.1; }.text-link { color: var(--ink); font-size: 12px; font-weight: 700; text-decoration: none; }.text-link span { margin-left: 7px; color: var(--coral); font-size: 17px; }.mood-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; }.mood-card { min-height: 128px; padding: 20px; border: 1px solid transparent; border-radius: 5px; color: var(--ink); text-align: left; cursor: pointer; transition: transform .2s, border-color .2s; }.mood-card:hover { border-color: var(--ink); transform: translateY(-3px); }.mood-icon { display: block; margin-bottom: 18px; font-size: 24px; }.mood-label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 700; }.mood-count { color: #6f766d; font-size: 11px; }.mood-mint { background: #dcefd7; }.mood-peach { background: #f8ddd0; }.mood-lilac { background: #e6e0ef; }.mood-yellow { background: #f5edbf; }
-.recipes-section { padding-top: 30px; }.filter-button { padding: 9px 12px; border: 1px solid var(--line); border-radius: 3px; background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; }.filter-button span { margin-left: 14px; color: var(--coral); }.recipe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }.recipe-card { overflow: hidden; border: 1px solid var(--line); border-radius: 5px; background: white; }.recipe-image { position: relative; display: grid; height: 188px; place-items: center; overflow: hidden; }.recipe-image::before, .recipe-image::after { position: absolute; width: 145px; height: 145px; border: 1px solid rgba(255,255,255,.25); border-radius: 50%; content: ''; }.recipe-image::after { width: 210px; height: 210px; }.recipe-image > span:first-child { z-index: 1; font-size: 77px; filter: drop-shadow(4px 8px 8px rgba(65, 50, 30, .17)); }.image-coral { background: #efa67c; }.image-green { background: #adc99a; }.image-berry { background: #c38891; }.rating { position: absolute; top: 14px; right: 14px; z-index: 2; padding: 6px 8px; border-radius: 3px; background: rgba(255, 255, 255, .8); font-size: 10px; font-weight: 700; }.recipe-details { padding: 17px 18px 14px; }.recipe-meta { display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--coral); font-size: 10px; font-weight: 700; text-transform: uppercase; }.recipe-meta span:last-child { color: var(--muted); font-weight: 500; text-transform: none; }.recipe-details h3 { margin-bottom: 6px; font-family: 'Playfair Display', serif; font-size: 21px; }.recipe-details p { min-height: 32px; margin-bottom: 17px; color: var(--muted); font-size: 12px; line-height: 1.4; }.recipe-footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 12px; color: var(--muted); font-size: 10px; }.recipe-footer button { border: 0; background: transparent; color: var(--coral); cursor: pointer; font-size: 22px; line-height: .7; }.empty-state { padding: 35px 0; color: var(--muted); text-align: center; }.share-banner { display: flex; align-items: center; justify-content: space-between; margin: 48px 0 32px; padding: 31px 36px; border-radius: 5px; background: var(--lime); }.share-banner h2 { margin-bottom: 7px; font-size: 26px; }.share-banner p:not(.eyebrow) { margin-bottom: 0; color: #5f6b4c; font-size: 13px; }.primary-button { padding: 14px 19px; }.primary-button span { margin-left: 16px; color: var(--lime); }.footer { display: flex; justify-content: space-between; border-top: 1px solid var(--line); padding: 22px 0 28px; color: var(--muted); font-size: 10px; }
-@media (max-width: 760px) { .page-shell { padding: 0 20px; }.topbar { height: 72px; }.navigation { display: none; }.hero-section { display: block; padding: 48px 0 30px; }.hero-visual { height: 295px; margin-top: 32px; }.sun-disc { width: 225px; height: 225px; right: 12%; }.cocktail-glass { top: 34px; width: 145px; height: 225px; }.drink { height: 153px; }.fruit-one { right: 0; bottom: 33px; }.fruit-two { left: 7%; }.visual-note { right: 0; }.section-heading { align-items: start; flex-direction: column; gap: 16px; }.mood-grid, .recipe-grid { grid-template-columns: 1fr 1fr; }.mood-card { min-height: 115px; padding: 16px; }.recipe-image { height: 145px; }.recipe-details { padding: 14px; }.recipe-details p { min-height: 50px; }.share-banner { display: block; margin-top: 28px; padding: 25px; }.share-banner .primary-button { margin-top: 20px; }.footer { gap: 20px; line-height: 1.5; }.footer span:last-child { text-align: right; } }
-@media (max-width: 460px) { h1 { font-size: 44px; }.search-bar button { padding: 13px 11px; }.mood-grid, .recipe-grid { grid-template-columns: 1fr; }.recipe-image { height: 180px; }.share-banner h2 { font-size: 23px; } }
-
-.mood-mint { background: #ffe0b2; }
-.mood-peach { background: #ffd0b5; }
-.mood-lilac { background: #f6d9c5; }
-.mood-yellow { background: #ffedb8; }
-.image-coral { background: #f5a06e; }
-.image-green { background: #e8ad68; }
-.image-berry { background: #e58b67; }
+.recipe-shape::before, .recipe-shape::after { position: absolute; content: ''; }
+.cocktail-sunset { background: linear-gradient(#ffd477 0 18%, #f47a3c 18% 100%); }
+.cocktail-sunset::before { top: -18px; right: 13px; width: 5px; height: 28px; border: 2px solid var(--ink); background: var(--orange); transform: rotate(14deg); }
+.cocktail-garden { background: linear-gradient(#e9f1b5 0 20%, #84ad69 20% 100%); }
+.cocktail-garden::before { top: -10px; left: 18px; width: 24px; height: 9px; border: 3px solid var(--ink); border-radius: 50%; background: #9bbc72; transform: rotate(-20deg); }
+.cocktail-berry { background: linear-gradient(#ffd08b 0 20%, #bd5961 20% 100%); }
+.cocktail-berry::before { top: 18px; right: 18px; width: 10px; height: 10px; border: 2px solid var(--ink); border-radius: 50%; background: #f5a06e; box-shadow: -19px 12px 0 -2px #e76532; }
+.cocktail-orange { background: linear-gradient(#fff0b0 0 18%, #ed7134 18% 100%); }
+.cocktail-orange::before { top: -12px; left: 14px; width: 34px; height: 5px; border: 2px solid var(--ink); border-radius: 50%; background: #ffd34f; }
+.cocktail-midnight { background: linear-gradient(#f7bd72 0 22%, #7b4654 22% 100%); }
+.cocktail-midnight::before { top: 31px; left: 20px; width: 7px; height: 7px; border-radius: 50%; background: #ffd38a; box-shadow: 18px 16px 0 #e76532, 4px 33px 0 #ffd38a; }
+.cocktail-golden { background: linear-gradient(#ffe2a0 0 21%, #efa34c 21% 100%); }
+.cocktail-golden::before { top: -12px; right: 14px; width: 20px; height: 9px; border: 3px solid var(--ink); border-radius: 50%; background: #ffc83b; transform: rotate(20deg); }
+.cocktail-cooler { background: linear-gradient(#f7eab0 0 20%, #8cb875 20% 100%); }
+.cocktail-cooler::before { top: -15px; left: 21px; width: 32px; height: 7px; border: 3px solid var(--ink); border-radius: 50%; background: #a9c983; transform: rotate(-8deg); }
+.recipe-photo { width: 100%; height: 100%; display: block; object-fit: contain; object-position: center center; background: #fff6ed; }
+.recipe-specs { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 15px; color: var(--muted); font-size: 10px; }
+.recipe-specs span { padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: #fff6ed; }
+.hero-section { position: relative; display: grid; width: 100vw; min-height: calc(100svh - 84px); margin-left: calc(50% - 50vw); padding: 72px 30px 55px; place-items: center; overflow: hidden; isolation: isolate; }
+.hero-section::after { position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, rgba(44, 27, 21, .75), rgba(44, 27, 21, .38)); content: ''; }
+.hero-video { position: absolute; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+.hero-copy { z-index: 1; max-width: 700px; text-align: center; }
+.hero-copy h1 { max-width: 700px; color: white; text-shadow: 3px 3px 0 rgba(44, 27, 21, .45); }
+.hero-text { margin-right: auto; margin-left: auto; color: #fff4e8; }
+.search-bar { margin-right: auto; margin-left: auto; text-align: left; }
+.search-note { color: #fff4e8; }
+.hero-section .eyebrow { color: #ffd38a; }
+.search-section, .trending-section { padding: 84px 0; }
+.search-section { max-width: 760px; margin: 0 auto; text-align: center; }
+.section-label { margin-bottom: 12px; color: var(--orange); font-size: 11px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.search-section h2, .section-heading h2 { margin: 0; font-family: 'Playfair Display', serif; font-size: clamp(34px, 5vw, 52px); letter-spacing: -.04em; line-height: 1; }
+.search-section > p { max-width: 500px; margin: 18px auto 28px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.search-section .search-bar { width: 100%; max-width: 680px; margin: 0 auto; text-align: left; box-shadow: 5px 6px 0 var(--orange-bright); }
+.search-section .search-bar > span { padding-left: 10px; color: var(--orange); font-size: 24px; line-height: 1; }
+.search-section .search-bar button { padding: 9px 12px; border: 2px solid var(--ink); border-radius: 9px; background: var(--gold); color: var(--ink); cursor: pointer; font-size: 11px; font-weight: 800; }
+.trending-section { border-top: 2px solid var(--line); }
+.section-heading { align-items: end; }
+.recipe-count { color: var(--muted); font-size: 12px; }
+.recipe-ingredients { min-height: 32px; color: var(--orange); font-size: 11px; font-weight: 700; line-height: 1.45; }
+.empty-state { margin: 0; padding: 38px; border: 2px dashed var(--line); color: var(--muted); text-align: center; }
+@media (max-width: 760px) { .site-shell { padding: 0 20px; }.topbar { height: 70px; }.navigation { gap: 12px; }.navigation a { font-size: 11px; }.hero-section { min-height: calc(100svh - 70px); margin-left: calc(50% - 50vw); padding: 40px 20px; }.hero-copy { width: 100%; }.hero-video { object-position: center; }.search-section, .trending-section { padding: 58px 0; }.section-heading { align-items: start; flex-direction: column; gap: 12px; }.recipe-grid { grid-template-columns: 1fr; }.recipe-card { width: 100%; } }
 </style>
