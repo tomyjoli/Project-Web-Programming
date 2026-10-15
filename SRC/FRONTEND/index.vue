@@ -7,6 +7,7 @@
       </a>
       <nav class="navigation" aria-label="Main navigation">
         <a href="#/" @click.prevent="goHome">Recipes</a>
+        <a href="#/users" @click.prevent="openUsersPage">Users</a>
         <a href="#/share" @click.prevent="openSharePage">Share</a>
         <a v-if="currentUser" href="#/album" @click.prevent="openAlbumPage">Album</a>
       </nav>
@@ -260,6 +261,68 @@
         <h1>Recipe not found</h1>
         <p>This recipe may have been removed or the link is incorrect.</p>
         <a class="create-button" href="#/" @click.prevent="goHome">Back to recipes</a>
+      </div>
+    </section>
+
+    <section v-else-if="currentPage === 'users'" class="detail-page users-page">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Meet the community</p>
+          <h1>Users</h1>
+          <p class="section-copy">Browse the people behind the Banana Split community.</p>
+        </div>
+        <span class="recipe-count">{{ filteredUsers.length }} users</span>
+      </div>
+      <label class="search-bar users-search" for="user-search">
+        <span aria-hidden="true">⌕</span>
+        <input id="user-search" v-model="userSearchQuery" type="search" placeholder="Search by username, email or bio..." />
+        <button v-if="userSearchQuery" type="button" @click="userSearchQuery = ''">Clear</button>
+      </label>
+      <div v-if="filteredUsers.length" class="users-grid">
+        <a
+          v-for="user in filteredUsers"
+          :key="user.user_id"
+          class="user-card"
+          :href="userProfileHref(user)"
+          @click.prevent="openUserProfile(user)"
+        >
+          <span class="user-avatar" aria-hidden="true">{{ user.username.slice(0, 1).toUpperCase() }}</span>
+          <span class="user-card-copy">
+            <strong>{{ user.username }}</strong>
+            <span>{{ user.bio || 'No description provided.' }}</span>
+          </span>
+          <span class="row-arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+      <p v-else class="empty-state">No users match your search. Try another name or email.</p>
+    </section>
+
+    <section v-else-if="currentPage === 'user-detail'" class="detail-page public-user-page">
+      <a class="back-link" href="#/users" @click.prevent="openUsersPage">← Back to users</a>
+      <article v-if="selectedUser" class="public-user-card">
+        <div class="public-user-heading">
+          <span class="user-avatar public-user-avatar" aria-hidden="true">{{ selectedUser.username.slice(0, 1).toUpperCase() }}</span>
+          <div>
+            <p class="eyebrow">Community member</p>
+            <h1>{{ selectedUser.username }}</h1>
+          </div>
+        </div>
+        <p class="public-user-bio">{{ selectedUser.bio || 'This user has not added a description yet.' }}</p>
+        <dl class="public-user-details">
+          <div>
+            <dt>Email</dt>
+            <dd><a :href="`mailto:${selectedUser.email}`">{{ selectedUser.email }}</a></dd>
+          </div>
+          <div>
+            <dt>Date of birth</dt>
+            <dd>{{ selectedUser.date_of_birth || 'Not provided' }}</dd>
+          </div>
+        </dl>
+      </article>
+      <div v-else class="not-found">
+        <h1>User not found</h1>
+        <p>This user may not exist in the community data.</p>
+        <a class="create-button" href="#/users" @click.prevent="openUsersPage">Back to users</a>
       </div>
     </section>
 
@@ -825,6 +888,7 @@ const currentRoute = ref(
     ? { page: 'signin', recipeId: null }
     : initialRoute,
 )
+const userSearchQuery = ref('')
 const reviewDraft = ref({ rating: '', comment: '' })
 const reviewMessage = ref('')
 let editorRowId = 0
@@ -849,6 +913,13 @@ const ownedRecipes = computed(() => [...recipes.value]
   .filter((recipe) => recipe.createdByCurrentUser)
   .sort((first, second) => second.recipe_id - first.recipe_id))
 const ownedRecipe = computed(() => ownedRecipes.value.find((recipe) => recipe.recipe_id === currentRoute.value.recipeId))
+const selectedUser = computed(() => users.find((user) => user.user_id === currentRoute.value.userId))
+const filteredUsers = computed(() => {
+  const query = userSearchQuery.value.trim().toLowerCase()
+  return users.filter((user) => [user.username, user.email, user.bio]
+    .filter(Boolean)
+    .some((value) => String(value).toLowerCase().includes(query)))
+})
 const favoriteRecipes = computed(() => {
   const favoriteIds = new Set(currentUser.value?.favoriteRecipeIds || [])
   return ratedRecipes.value.filter((recipe) => favoriteIds.has(recipe.recipe_id))
@@ -915,6 +986,9 @@ function readRoute() {
   if (route === '#/signup') return { page: 'signup', recipeId: null }
   if (route === '#/signin') return { page: 'signin', recipeId: null }
   if (route === '#/profile') return { page: 'profile', recipeId: null }
+  if (route === '#/users') return { page: 'users', recipeId: null }
+  const userMatch = route.match(/^#\/users\/(\d+)$/)
+  if (userMatch) return { page: 'user-detail', userId: Number(userMatch[1]), recipeId: null }
   if (route === '#/album') return { page: 'album', recipeId: null }
   if (route === '#/album/create') return { page: 'album-create', recipeId: null }
   const recipeMatch = route.match(/^#\/recipes\/(\d+)$/)
@@ -956,6 +1030,22 @@ function recipeHref(recipe) {
 
 function ownedRecipeHref(recipe) {
   return `#/share/recipes/${recipe.recipe_id}`
+}
+
+function userProfileHref(user) {
+  return `#/users/${user.user_id}`
+}
+
+function openUsersPage() {
+  window.history.pushState(null, '', '#/users')
+  currentRoute.value = { page: 'users', recipeId: null }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function openUserProfile(user) {
+  window.history.pushState(null, '', userProfileHref(user))
+  currentRoute.value = { page: 'user-detail', userId: user.user_id, recipeId: null }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function openRecipe(recipe) {
@@ -1671,6 +1761,25 @@ a { color: inherit; }
 .share-section > div > p:last-child { margin: 12px 0 0; color: var(--muted); font-size: 14px; }
 .create-button { background: var(--yellow); white-space: nowrap; }
 .detail-page { max-width: 1030px; min-height: 75vh; margin: 0 auto; padding: 38px 0 80px; }
+.users-page .section-heading h1, .public-user-heading h1 { margin: 0; font-family: 'Playfair Display', serif; font-size: clamp(36px, 5vw, 52px); line-height: 1.05; }
+.users-search { max-width: 620px; margin-bottom: 26px; }
+.users-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.user-card { display: flex; min-width: 0; align-items: center; gap: 15px; padding: 18px; border-radius: 14px; background: var(--cream); text-decoration: none; transition: transform .18s ease; }
+.user-card:hover { transform: translateY(-3px); }
+.user-avatar { display: grid; width: 52px; height: 52px; flex: 0 0 auto; place-items: center; border: 2px solid var(--ink); border-radius: 50%; background: var(--yellow); color: var(--ink); font-family: 'Playfair Display', serif; font-size: 23px; font-weight: 700; }
+.user-card-copy { display: grid; min-width: 0; flex: 1; gap: 5px; }
+.user-card-copy strong { overflow: hidden; font-family: 'Playfair Display', serif; font-size: 19px; text-overflow: ellipsis; }
+.user-card-copy > span { display: -webkit-box; overflow: hidden; color: var(--muted); font-size: 12px; line-height: 1.5; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.public-user-card { max-width: 720px; padding: clamp(24px, 5vw, 44px); border: 2px solid var(--ink); border-radius: 18px; background: var(--cream); box-shadow: 6px 7px 0 #f5a06e; }
+.public-user-heading { display: flex; align-items: center; gap: 20px; }
+.public-user-avatar { width: 76px; height: 76px; font-size: 34px; }
+.public-user-heading .eyebrow { margin-bottom: 8px; }
+.public-user-bio { margin: 28px 0; color: var(--muted); font-size: 15px; line-height: 1.7; }
+.public-user-details { display: grid; gap: 14px; margin: 0; }
+.public-user-details > div { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 12px; padding-top: 14px; border-top: 1px solid var(--line); }
+.public-user-details dt { color: var(--muted); font-size: 12px; font-weight: 700; }
+.public-user-details dd { min-width: 0; margin: 0; font-size: 13px; overflow-wrap: anywhere; }
+.public-user-details a { color: var(--orange); text-decoration: none; }
 .back-link { display: inline-block; margin: 0 0 24px; color: var(--orange); font-size: 13px; font-weight: 800; text-decoration: none; }
 .detail-card { display: grid; grid-template-columns: minmax(280px, .85fr) 1.15fr; overflow: hidden; border: 2px solid var(--ink); border-radius: 18px; background: var(--cream); box-shadow: 6px 7px 0 #f5a06e; }
 .detail-image { width: 100%; height: 100%; min-height: 340px; background: #f8dec7; object-fit: cover; }
@@ -1742,6 +1851,7 @@ a { color: inherit; }
   .navigation { gap: 13px; }
   .navigation a { font-size: 11px; }
   .profile-button { padding: 9px 10px; font-size: 10px; }
+  .public-user-details > div { grid-template-columns: 1fr; gap: 5px; }
   .hero-section { min-height: 490px; }
   .hero-copy { padding: 50px 22px; }
   .page-section { padding: 55px 0; }
