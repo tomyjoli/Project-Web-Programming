@@ -1,0 +1,9 @@
+{
+  "name": "project-web-programming",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix SRC/FRONTEND run dev",
+    "build": "npm --prefix SRC/FRONTEND run build",
+    "preview": "npm --prefix SRC/FRONTEND run preview"
+  }
+}
