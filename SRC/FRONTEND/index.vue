@@ -8,6 +8,7 @@
       <nav class="navigation" aria-label="Main navigation">
         <a href="#/" @click.prevent="goHome">Recipes</a>
         <a href="#/users" @click.prevent="openUsersPage">Users</a>
+        <a href="#/ingredients" @click.prevent="openIngredientsPage">Ingredients</a>
         <a href="#/share" @click.prevent="openSharePage">Share</a>
         <a v-if="currentUser" href="#/album" @click.prevent="openAlbumPage">Album</a>
       </nav>
@@ -62,6 +63,12 @@
       :user="selectedUser"
       @back="openUsersPage"
     />
+    <IngredientsPage
+      v-else-if="currentPage === 'ingredients'"
+      :filtered-ingredients="filteredIngredients"
+      :ingredient-search-query="ingredientSearchQuery"
+      @update:ingredient-search-query="ingredientSearchQuery = $event"
+    />
     <SharePage v-else-if="currentPage === 'share'" />
 
     <AlbumPage v-else-if="currentPage === 'album' || currentPage === 'album-create'" />
@@ -82,6 +89,7 @@ import RecipesPage from './pages/RecipesPage.vue'
 import RecipeDetailPage from './pages/RecipeDetailPage.vue'
 import UsersPage from './pages/UsersPage.vue'
 import UserProfilePage from './pages/UserProfilePage.vue'
+import IngredientsPage from './pages/IngredientsPage.vue'
 import SharePage from './pages/SharePage.vue'
 import AlbumPage from './pages/AlbumPage.vue'
 import OwnedRecipePage from './pages/OwnedRecipePage.vue'
@@ -236,6 +244,7 @@ const currentRoute = ref(
     : initialRoute,
 )
 const userSearchQuery = ref('')
+const ingredientSearchQuery = ref('')
 const reviewDraft = ref({ rating: '', comment: '' })
 const reviewMessage = ref('')
 let editorRowId = 0
@@ -266,6 +275,14 @@ const filteredUsers = computed(() => {
   return users.filter((user) => [user.username, user.email, user.bio]
     .filter(Boolean)
     .some((value) => String(value).toLowerCase().includes(query)))
+})
+const filteredIngredients = computed(() => {
+  const query = ingredientSearchQuery.value.trim().toLowerCase()
+  return allIngredients.filter((ingredient) => [
+    ingredient.ingredient_name,
+    ingredient.category_name,
+    ingredient.allergens,
+  ].filter(Boolean).some((value) => String(value).toLowerCase().includes(query)))
 })
 const favoriteRecipes = computed(() => {
   const favoriteIds = new Set(currentUser.value?.favoriteRecipeIds || [])
@@ -334,6 +351,7 @@ function readRoute() {
   if (route === '#/signin') return { page: 'signin', recipeId: null }
   if (route === '#/profile') return { page: 'profile', recipeId: null }
   if (route === '#/users') return { page: 'users', recipeId: null }
+  if (route === '#/ingredients') return { page: 'ingredients', recipeId: null }
   const userMatch = route.match(/^#\/users\/(\d+)$/)
   if (userMatch) return { page: 'user-detail', userId: Number(userMatch[1]), recipeId: null }
   if (route === '#/album') return { page: 'album', recipeId: null }
@@ -386,6 +404,12 @@ function userProfileHref(user) {
 function openUsersPage() {
   window.history.pushState(null, '', '#/users')
   currentRoute.value = { page: 'users', recipeId: null }
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function openIngredientsPage() {
+  window.history.pushState(null, '', '#/ingredients')
+  currentRoute.value = { page: 'ingredients', recipeId: null }
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -1165,6 +1189,17 @@ a { color: inherit; }
 .users-page .section-heading h1, .public-user-heading h1 { margin: 0; font-family: 'Playfair Display', serif; font-size: clamp(36px, 5vw, 52px); line-height: 1.05; }
 .users-search { max-width: 620px; margin-bottom: 26px; }
 .users-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.ingredients-page .section-heading h1 { margin: 0; font-family: 'Playfair Display', serif; font-size: clamp(36px, 5vw, 52px); line-height: 1.05; }
+.ingredients-search { max-width: 620px; margin-bottom: 26px; }
+.ingredients-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.ingredient-card { min-width: 0; padding: 22px; border: 1px solid var(--line); border-radius: 10px; background: var(--cream); }
+.ingredient-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; padding-bottom: 15px; border-bottom: 1px solid var(--line); }
+.ingredient-card-heading h2 { margin: 0; font-family: var(--font-family); font-size: 20px; font-weight: 600; }
+.ingredient-card-heading > span { flex: 0 0 auto; padding: 5px 8px; border-radius: 4px; background: #f2eee6; color: var(--muted); font-size: 10px; }
+.ingredient-card-details { display: grid; gap: 12px; margin: 16px 0 0; }
+.ingredient-card-details > div { display: flex; justify-content: space-between; gap: 12px; }
+.ingredient-card-details dt { color: var(--muted); font-size: 11px; }
+.ingredient-card-details dd { margin: 0; font-size: 11px; font-weight: 600; text-align: right; }
 .user-card { display: flex; min-width: 0; align-items: center; gap: 15px; padding: 18px; border-radius: 14px; background: var(--cream); text-decoration: none; transition: transform .18s ease; }
 .user-card:hover { transform: translateY(-3px); }
 .user-avatar { display: grid; width: 52px; height: 52px; flex: 0 0 auto; place-items: center; border: 2px solid var(--ink); border-radius: 50%; background: var(--yellow); color: var(--ink); font-family: 'Playfair Display', serif; font-size: 23px; font-weight: 700; }
