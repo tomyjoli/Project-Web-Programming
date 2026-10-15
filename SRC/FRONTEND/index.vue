@@ -19,727 +19,75 @@
     </header>
     <p v-if="favoritesError" class="favorites-error" role="alert">{{ favoritesError }}</p>
 
-    <template v-if="currentPage === 'recipes' && !currentRecipe">
-      <section id="top" class="hero-section">
-        <video class="hero-video" autoplay muted loop playsinline aria-hidden="true">
-          <source :src="cocktailVideo" type="video/mp4" />
-        </video>
-        <div class="hero-overlay"></div>
-        <div class="hero-copy">
-          <p class="eyebrow">Cocktails made personal</p>
-          <h1>Good drinks start with a little inspiration.</h1>
-          <p class="hero-text">Explore recipes created and rated by the Banana Split community.</p>
-          <a class="hero-link" href="#featured">Explore recipes</a>
-        </div>
-      </section>
+    <RecipesPage
+      v-if="currentPage === 'recipes' && !currentRecipe"
+      :cocktail-video="cocktailVideo"
+      :featured-recipes="featuredRecipes"
+      :search-query="searchQuery"
+      :selected-ingredient="selectedIngredient"
+      :all-ingredient-names="allIngredientNames"
+      :sort-mode="sortMode"
+      :filtered-recipes="filteredRecipes"
+      :is-favorite="isFavorite"
+      :recipe-href="recipeHref"
+      @open-recipe="openRecipe"
+      @toggle-favorite="toggleFavorite"
+      @create-recipe="openCreatePage"
+      @update:search-query="searchQuery = $event"
+      @update:selected-ingredient="selectedIngredient = $event"
+      @update:sort-mode="sortMode = $event"
+    />
+    <RecipeDetailPage
+      v-else-if="currentPage === 'recipes'"
+      :current-recipe="currentRecipe"
+      :recipe-reviews="recipeReviews"
+      :review-draft="reviewDraft"
+      :review-message="reviewMessage"
+      :is-favorite="isFavorite"
+      @back="goHome"
+      @toggle-favorite="toggleFavorite"
+      @submit-review="submitReview"
+    />
 
-      <div class="content-shell">
-        <section id="featured" class="page-section featured-section">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Community favorites</p>
-              <h2>Recipes worth a toast</h2>
-            </div>
-            <p class="section-copy">The highest-rated cocktails, picked by the people who made them.</p>
-          </div>
-          <div class="featured-grid">
-            <div
-              v-for="(recipe, index) in featuredRecipes"
-              :key="recipe.recipe_id"
-              class="featured-item"
-            >
-              <a
-                class="featured-card"
-                :href="recipeHref(recipe)"
-                @click.prevent="openRecipe(recipe)"
-              >
-                <div class="featured-image">
-                  <img v-if="recipe.image" :src="recipe.image" :alt="recipe.title" />
-                  <div v-else class="recipe-image-placeholder" aria-hidden="true">🍸</div>
-                  <span class="featured-rank">Top {{ index + 1 }}</span>
-                </div>
-                <div class="featured-copy">
-                  <span class="rating-pill">★ {{ recipe.rating }} <span>({{ recipe.ratingCount }})</span></span>
-                  <h3>{{ recipe.title }}</h3>
-                  <p>By {{ recipe.author }}</p>
-                </div>
-              </a>
-              <button
-                class="favorite-button"
-                :class="{ 'is-favorite': isFavorite(recipe) }"
-                type="button"
-                :aria-label="isFavorite(recipe) ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`"
-                :aria-pressed="isFavorite(recipe)"
-                @click="toggleFavorite(recipe)"
-              ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" /></svg></button>
-            </div>
-          </div>
-        </section>
+    <UsersPage
+      v-else-if="currentPage === 'users'"
+      :filtered-users="filteredUsers"
+      :user-search-query="userSearchQuery"
+      :user-profile-href="userProfileHref"
+      @update:user-search-query="userSearchQuery = $event"
+      @open-user="openUserProfile"
+    />
+    <UserProfilePage
+      v-else-if="currentPage === 'user-detail'"
+      :user="selectedUser"
+      @back="openUsersPage"
+    />
+    <SharePage v-else-if="currentPage === 'share'" />
 
-        <section id="filters" class="page-section filters-section">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Find your next pour</p>
-              <h2>Search & filter</h2>
-            </div>
-            <p class="section-copy">Look up a cocktail by name, ingredient or creator.</p>
-          </div>
-          <div class="filter-controls">
-            <label class="search-bar" for="recipe-search">
-              <span aria-hidden="true">⌕</span>
-              <input id="recipe-search" v-model="searchQuery" type="search" placeholder="Try vodka, pineapple, Tom..." />
-              <button v-if="searchQuery" type="button" @click="searchQuery = ''">Clear</button>
-            </label>
-            <label class="filter-select">
-              <span>Ingredient</span>
-              <select v-model="selectedIngredient">
-                <option value="">All ingredients</option>
-                <option v-for="ingredient in allIngredientNames" :key="ingredient" :value="ingredient">{{ ingredient }}</option>
-              </select>
-            </label>
-            <label class="filter-select">
-              <span>Sort by</span>
-              <select v-model="sortMode">
-                <option value="rating">Highest rated</option>
-                <option value="title">Title (A–Z)</option>
-              </select>
-            </label>
-          </div>
-        </section>
+    <AlbumPage v-else-if="currentPage === 'album' || currentPage === 'album-create'" />
 
-        <section id="catalog" class="page-section catalog-section">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Made by the community</p>
-              <h2>Recipe catalogue</h2>
-            </div>
-            <span class="recipe-count">{{ filteredRecipes.length }} recipes</span>
-          </div>
+    <OwnedRecipePage v-else-if="currentPage === 'share-detail'" />
 
-          <div v-if="filteredRecipes.length" class="recipe-list">
-            <div
-              v-for="recipe in filteredRecipes"
-              :key="recipe.recipe_id"
-              class="recipe-list-item"
-            >
-              <a
-                class="recipe-row"
-                :href="recipeHref(recipe)"
-                @click.prevent="openRecipe(recipe)"
-              >
-                <img v-if="recipe.image" class="recipe-row-image" :src="recipe.image" :alt="recipe.title" />
-                <div v-else class="recipe-row-image recipe-image-placeholder" aria-hidden="true">🍸</div>
-                <div class="recipe-row-copy">
-                  <div class="recipe-meta"><span>Community recipe</span><span>By {{ recipe.author }}</span></div>
-                  <h3>{{ recipe.title }}</h3>
-                  <p>{{ recipe.description }}</p>
-                  <div class="recipe-tags">
-                    <span v-for="ingredient in recipe.ingredients" :key="ingredient.name">{{ ingredient.name }}</span>
-                    <span>{{ recipe.preparationTime }}</span>
-                  </div>
-                </div>
-                <div class="recipe-row-rating">
-                  <strong>★ {{ recipe.rating }}</strong>
-                  <span>{{ recipe.ratingCount }} reviews</span>
-                </div>
-                <span class="row-arrow" aria-hidden="true">→</span>
-              </a>
-              <button
-                class="favorite-button"
-                :class="{ 'is-favorite': isFavorite(recipe) }"
-                type="button"
-                :aria-label="isFavorite(recipe) ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`"
-                :aria-pressed="isFavorite(recipe)"
-                @click="toggleFavorite(recipe)"
-              ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" /></svg></button>
-            </div>
-          </div>
-          <p v-else class="empty-state">No recipes match those filters. Try another search.</p>
-        </section>
+    <RecipeFormPage v-else-if="currentPage === 'recipe-form'" />
 
-        <section id="share" class="share-section">
-          <div>
-            <p class="eyebrow">Your turn</p>
-            <h2>Want to share your creation?</h2>
-            <p>Have a cocktail recipe of your own? We would love to see it.</p>
-          </div>
-          <a class="create-button" href="#/share/create" @click.prevent="openCreatePage">Create a recipe <span aria-hidden="true">→</span></a>
-        </section>
-      </div>
-    </template>
+    <AuthPage v-else-if="currentPage === 'signup' || currentPage === 'signin'" />
 
-    <section v-else-if="currentPage === 'recipes'" class="detail-page">
-      <template v-if="currentRecipe">
-        <a class="back-link" href="#/" @click.prevent="goHome">← Back to recipes</a>
-        <article class="recipe-detail">
-          <div class="detail-heading detail-heading-with-favorite">
-            <div>
-              <p class="eyebrow">Recipe by {{ currentRecipe.author }}</p>
-              <h1>{{ currentRecipe.title }}</h1>
-              <p class="detail-description">{{ currentRecipe.description }}</p>
-            </div>
-            <button
-              class="favorite-button"
-              :class="{ 'is-favorite': isFavorite(currentRecipe) }"
-              type="button"
-              :aria-label="isFavorite(currentRecipe) ? `Remove ${currentRecipe.title} from favorites` : `Add ${currentRecipe.title} to favorites`"
-              :aria-pressed="isFavorite(currentRecipe)"
-              @click="toggleFavorite(currentRecipe)"
-            ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" /></svg></button>
-          </div>
-          <div class="detail-hero">
-            <img v-if="currentRecipe.image" class="detail-image" :src="currentRecipe.image" :alt="currentRecipe.title" />
-            <div v-else class="detail-image recipe-image-placeholder" aria-hidden="true">🍸</div>
-            <div class="detail-stats">
-              <span class="detail-rating">★ {{ currentRecipe.rating }} <small>({{ currentRecipe.ratingCount }} reviews)</small></span>
-              <span><small>PREPARATION</small>{{ currentRecipe.preparationTime }}</span>
-              <span><small>GLASS</small>{{ currentRecipe.glass_name }} · {{ currentRecipe.capacity_cl }} cl</span>
-            </div>
-          </div>
-        </article>
-
-        <div class="detail-columns">
-          <section class="detail-panel">
-            <p class="eyebrow">What you need</p>
-            <h2>Ingredients</h2>
-            <ul class="ingredient-list">
-              <li v-for="ingredient in currentRecipe.ingredients" :key="ingredient.name">
-                <span>{{ ingredient.name }}</span>
-                <strong>{{ ingredient.quantity }} {{ ingredient.unit }}</strong>
-              </li>
-            </ul>
-          </section>
-          <section class="detail-panel">
-            <p class="eyebrow">Take it step by step</p>
-            <h2>How to make it</h2>
-            <ol class="step-list">
-              <li v-for="step in currentRecipe.steps" :key="step.step_number">
-                <span class="step-number">{{ step.step_number }}</span>
-                <p>{{ step.instruction }}</p>
-              </li>
-            </ol>
-          </section>
-        </div>
-
-        <section class="reviews-section">
-          <div class="section-heading">
-            <div>
-              <p class="eyebrow">Join the conversation</p>
-              <h2>Ratings & reviews</h2>
-            </div>
-            <span class="recipe-count">{{ recipeReviews.length }} reviews</span>
-          </div>
-          <form class="review-form" @submit.prevent="submitReview">
-            <label>
-              Your rating
-              <select v-model.number="reviewDraft.rating" required>
-                <option disabled value="">Choose a rating</option>
-                <option v-for="rating in 5" :key="rating" :value="rating">{{ rating }} / 5</option>
-              </select>
-            </label>
-            <label class="review-comment">
-              Your review
-              <textarea v-model.trim="reviewDraft.comment" required rows="3" placeholder="What did you think of this cocktail?"></textarea>
-            </label>
-            <button class="create-button" type="submit">Post review</button>
-            <p v-if="reviewMessage" class="review-message" role="status">{{ reviewMessage }}</p>
-          </form>
-          <div v-if="recipeReviews.length" class="review-list">
-            <article v-for="review in recipeReviews" :key="review.review_id" class="review-card">
-              <div class="review-heading">
-                <strong>{{ review.author }}</strong>
-                <span class="review-stars" :aria-label="`${review.rating} out of 5 stars`">{{ '★'.repeat(Number(review.rating)) }}{{ '☆'.repeat(5 - Number(review.rating)) }}</span>
-              </div>
-              <p>{{ review.comment }}</p>
-            </article>
-          </div>
-          <p v-else class="empty-state">No reviews yet. Be the first to share your thoughts.</p>
-        </section>
-      </template>
-      <div v-else class="not-found">
-        <h1>Recipe not found</h1>
-        <p>This recipe may have been removed or the link is incorrect.</p>
-        <a class="create-button" href="#/" @click.prevent="goHome">Back to recipes</a>
-      </div>
-    </section>
-
-    <section v-else-if="currentPage === 'users'" class="detail-page users-page">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Meet the community</p>
-          <h1>Users</h1>
-          <p class="section-copy">Browse the people behind the Banana Split community.</p>
-        </div>
-        <span class="recipe-count">{{ filteredUsers.length }} users</span>
-      </div>
-      <label class="search-bar users-search" for="user-search">
-        <span aria-hidden="true">⌕</span>
-        <input id="user-search" v-model="userSearchQuery" type="search" placeholder="Search by username, email or bio..." />
-        <button v-if="userSearchQuery" type="button" @click="userSearchQuery = ''">Clear</button>
-      </label>
-      <div v-if="filteredUsers.length" class="users-grid">
-        <a
-          v-for="user in filteredUsers"
-          :key="user.user_id"
-          class="user-card"
-          :href="userProfileHref(user)"
-          @click.prevent="openUserProfile(user)"
-        >
-          <span class="user-avatar" aria-hidden="true">{{ user.username.slice(0, 1).toUpperCase() }}</span>
-          <span class="user-card-copy">
-            <strong>{{ user.username }}</strong>
-            <span>{{ user.bio || 'No description provided.' }}</span>
-          </span>
-          <span class="row-arrow" aria-hidden="true">→</span>
-        </a>
-      </div>
-      <p v-else class="empty-state">No users match your search. Try another name or email.</p>
-    </section>
-
-    <section v-else-if="currentPage === 'user-detail'" class="detail-page public-user-page">
-      <a class="back-link" href="#/users" @click.prevent="openUsersPage">← Back to users</a>
-      <article v-if="selectedUser" class="public-user-card">
-        <div class="public-user-heading">
-          <span class="user-avatar public-user-avatar" aria-hidden="true">{{ selectedUser.username.slice(0, 1).toUpperCase() }}</span>
-          <div>
-            <p class="eyebrow">Community member</p>
-            <h1>{{ selectedUser.username }}</h1>
-          </div>
-        </div>
-        <p class="public-user-bio">{{ selectedUser.bio || 'This user has not added a description yet.' }}</p>
-        <dl class="public-user-details">
-          <div>
-            <dt>Email</dt>
-            <dd><a :href="`mailto:${selectedUser.email}`">{{ selectedUser.email }}</a></dd>
-          </div>
-          <div>
-            <dt>Date of birth</dt>
-            <dd>{{ selectedUser.date_of_birth || 'Not provided' }}</dd>
-          </div>
-        </dl>
-      </article>
-      <div v-else class="not-found">
-        <h1>User not found</h1>
-        <p>This user may not exist in the community data.</p>
-        <a class="create-button" href="#/users" @click.prevent="openUsersPage">Back to users</a>
-      </div>
-    </section>
-
-    <section v-else-if="currentPage === 'share'" class="detail-page share-page">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Your creations</p>
-          <h1>Shared recipes</h1>
-          <p class="section-copy">A catalogue of the cocktails you have created.</p>
-        </div>
-        <button class="create-button" type="button" @click="openCreatePage">Create a recipe <span aria-hidden="true">+</span></button>
-      </div>
-      <div v-if="ownedRecipes.length" class="recipe-list">
-        <div
-          v-for="recipe in ownedRecipes"
-          :key="recipe.recipe_id"
-          class="recipe-list-item"
-        >
-          <a
-            class="recipe-row"
-            :href="ownedRecipeHref(recipe)"
-            @click.prevent="openOwnedRecipe(recipe)"
-          >
-            <img v-if="recipe.image" class="recipe-row-image" :src="recipe.image" :alt="recipe.title" />
-            <div v-else class="recipe-row-image recipe-image-placeholder" aria-hidden="true">🍸</div>
-            <div class="recipe-row-copy">
-              <div class="recipe-meta"><span>Your recipe</span><span>{{ recipe.difficulty }}</span></div>
-              <h3>{{ recipe.title }}</h3>
-              <p>{{ recipe.description }}</p>
-              <div class="recipe-tags">
-                <span v-for="ingredient in recipe.ingredients" :key="ingredient.name">{{ ingredient.name }}</span>
-              </div>
-            </div>
-            <span class="row-arrow" aria-hidden="true">→</span>
-          </a>
-          <button
-            class="favorite-button"
-            :class="{ 'is-favorite': isFavorite(recipe) }"
-            type="button"
-            :aria-label="isFavorite(recipe) ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`"
-            :aria-pressed="isFavorite(recipe)"
-            @click="toggleFavorite(recipe)"
-          ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" /></svg></button>
-        </div>
-      </div>
-      <p v-else class="no-owned-recipes">There is no recipes here for the moment</p>
-    </section>
-
-    <section v-else-if="currentPage === 'album'" class="detail-page album-page">
-      <div class="form-page-heading">
-        <p class="eyebrow">Your collection</p>
-        <h1>Album</h1>
-        <p>Your favorite cocktails, all in one place.</p>
-      </div>
-      <div class="album-toolbar">
-        <h2>Your fridges</h2>
-        <button class="create-button" type="button" @click="openAlbumCreatePage">Create an album</button>
-      </div>
-      <div v-if="userAlbums.length" class="fridge-grid">
-        <div
-          v-for="album in userAlbums"
-          :key="album.id"
-          class="fridge-card-item"
-        >
-          <button
-            class="fridge-card"
-            :class="{ 'is-selected': selectedAlbumId === album.id }"
-            type="button"
-            :aria-pressed="selectedAlbumId === album.id"
-            @click="selectedAlbumId = selectedAlbumId === album.id ? null : album.id"
-          >
-            <span class="fridge-illustration" :style="{ '--fridge-color': album.color }" aria-hidden="true">
-              <span class="fridge-freezer"></span>
-              <span class="fridge-handle"></span>
-            </span>
-            <strong>{{ album.name }}</strong>
-            <span>{{ recipesInAlbum(album.id) }} recipes</span>
-          </button>
-          <button class="delete-album-button" type="button" :aria-label="`Delete album ${album.name}`" @click="deleteAlbum(album)">Delete</button>
-        </div>
-      </div>
-      <p v-if="albumError" class="form-error album-error" role="alert">{{ albumError }}</p>
-      <p v-if="!userAlbums.length" class="empty-state album-empty">You haven't created a fridge yet. Create an album to organize your favorite recipes.</p>
-      <div class="album-toolbar favorites-toolbar">
-        <h2>{{ selectedAlbum ? selectedAlbum.name : 'Favorite recipes' }}</h2>
-        <button v-if="selectedAlbumId" class="text-button" type="button" @click="selectedAlbumId = null">Show all favorites</button>
-      </div>
-      <div v-if="displayedFavoriteRecipes.length" class="recipe-list">
-        <div v-for="recipe in displayedFavoriteRecipes" :key="recipe.recipe_id" class="recipe-list-item">
-          <a
-            class="recipe-row"
-            :href="recipe.createdByCurrentUser ? ownedRecipeHref(recipe) : recipeHref(recipe)"
-            @click.prevent="recipe.createdByCurrentUser ? openOwnedRecipe(recipe) : openRecipe(recipe)"
-          >
-            <img v-if="recipe.image" class="recipe-row-image" :src="recipe.image" :alt="recipe.title" />
-            <div v-else class="recipe-row-image recipe-image-placeholder" aria-hidden="true">🍸</div>
-            <div class="recipe-row-copy">
-              <div class="recipe-meta"><span>By {{ recipe.author }}</span><span v-if="recipe.difficulty">{{ recipe.difficulty }}</span></div>
-              <h3>{{ recipe.title }}</h3>
-              <p>{{ recipe.description }}</p>
-            </div>
-            <span class="row-arrow" aria-hidden="true">→</span>
-          </a>
-          <label class="recipe-album-select" @click.stop>
-            Add to fridge
-            <select :value="albumIdForRecipe(recipe)" @change="assignRecipeToAlbum(recipe, $event)">
-              <option value="">No album</option>
-              <option v-for="album in userAlbums" :key="album.id" :value="album.id">{{ album.name }}</option>
-            </select>
-          </label>
-          <button
-            class="favorite-button is-favorite"
-            type="button"
-            :aria-label="`Remove ${recipe.title} from favorites`"
-            aria-pressed="true"
-            @click="toggleFavorite(recipe)"
-          ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" /></svg></button>
-        </div>
-      </div>
-      <p v-else class="empty-state">
-        {{ selectedAlbum ? 'This fridge is empty. Show all favorites to add recipes to it.' : 'No favorites yet. Browse the recipes and tap a heart to save one here.' }}
-        <button v-if="selectedAlbum" class="text-button" type="button" @click="selectedAlbumId = null">Show all favorites</button>
-      </p>
-    </section>
-
-    <section v-else-if="currentPage === 'album-create'" class="detail-page album-create-page">
-      <a class="back-link" href="#/album" @click.prevent="openAlbumPage">← Back to album</a>
-      <div class="form-page-heading">
-        <p class="eyebrow">Organize your favorites</p>
-        <h1>Create an album</h1>
-        <p>Give your new fridge a name and choose its color.</p>
-      </div>
-      <form class="recipe-editor album-editor" @submit.prevent="createAlbum">
-        <label>
-          Album name
-          <input v-model.trim="albumForm.name" required maxlength="40" placeholder="e.g. Summer favorites" />
-        </label>
-        <fieldset class="album-color-field">
-          <legend>Fridge color</legend>
-          <label v-for="color in albumColors" :key="color.value" class="album-color-option">
-            <input v-model="albumForm.color" type="radio" name="album-color" :value="color.value" />
-            <span class="album-color-swatch" :style="{ backgroundColor: color.value }"></span>
-            {{ color.name }}
-          </label>
-        </fieldset>
-        <div class="fridge-preview-wrap">
-          <span class="fridge-illustration fridge-preview" :style="{ '--fridge-color': albumForm.color }" aria-hidden="true">
-            <span class="fridge-freezer"></span>
-            <span class="fridge-handle"></span>
-          </span>
-          <strong>{{ albumForm.name || 'Your new fridge' }}</strong>
-        </div>
-        <p v-if="albumError" class="form-error" role="alert">{{ albumError }}</p>
-        <div class="editor-actions">
-          <button class="create-button" type="submit">Create album</button>
-          <button class="text-button" type="button" @click="openAlbumPage">Cancel</button>
-        </div>
-      </form>
-    </section>
-
-    <section v-else-if="currentPage === 'share-detail'" class="detail-page">
-      <template v-if="ownedRecipe">
-        <a class="back-link" href="#/share" @click.prevent="openSharePage">← Back to your recipes</a>
-        <article class="recipe-detail">
-          <div class="detail-heading detail-heading-with-favorite">
-            <div>
-              <p class="eyebrow">Your recipe · {{ ownedRecipe.difficulty }}</p>
-              <h1>{{ ownedRecipe.title }}</h1>
-              <p class="detail-description">{{ ownedRecipe.description }}</p>
-            </div>
-            <button
-              class="favorite-button"
-              :class="{ 'is-favorite': isFavorite(ownedRecipe) }"
-              type="button"
-              :aria-label="isFavorite(ownedRecipe) ? `Remove ${ownedRecipe.title} from favorites` : `Add ${ownedRecipe.title} to favorites`"
-              :aria-pressed="isFavorite(ownedRecipe)"
-              @click="toggleFavorite(ownedRecipe)"
-            ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" /></svg></button>
-          </div>
-          <div class="detail-hero">
-            <img v-if="ownedRecipe.image" class="detail-image" :src="ownedRecipe.image" :alt="ownedRecipe.title" />
-            <div v-else class="detail-image recipe-image-placeholder" aria-hidden="true">🍸</div>
-            <div class="detail-stats">
-              <span><small>DIFFICULTY</small>{{ ownedRecipe.difficulty }}</span>
-              <span><small>INGREDIENTS</small>{{ ownedRecipe.ingredients.length }} items</span>
-              <span><small>PREPARATION STEPS</small>{{ ownedRecipe.steps.length }} steps</span>
-            </div>
-          </div>
-          <div class="owned-recipe-actions">
-            <button class="create-button" type="button" @click="openEditPage(ownedRecipe)">Edit recipe</button>
-            <button class="delete-button" type="button" @click="deleteOwnedRecipe(ownedRecipe)">Delete recipe</button>
-          </div>
-          <p v-if="formError" class="form-error" role="alert">{{ formError }}</p>
-        </article>
-        <div class="detail-columns">
-          <section class="detail-panel">
-            <p class="eyebrow">What you need</p>
-            <h2>Ingredients</h2>
-            <ul class="ingredient-list">
-              <li v-for="ingredient in ownedRecipe.ingredients" :key="ingredient.id">
-                <span>{{ ingredient.name }}</span>
-                <strong>{{ ingredient.quantity }} {{ ingredient.unit }}</strong>
-              </li>
-            </ul>
-          </section>
-          <section class="detail-panel">
-            <p class="eyebrow">Take it step by step</p>
-            <h2>How to make it</h2>
-            <ol class="step-list">
-              <li v-for="step in ownedRecipe.steps" :key="step.id">
-                <span class="step-number">{{ step.step_number }}</span>
-                <p>{{ step.instruction }}</p>
-              </li>
-            </ol>
-          </section>
-        </div>
-      </template>
-      <div v-else class="not-found">
-        <h1>Recipe not found</h1>
-        <a class="create-button" href="#/share" @click.prevent="openSharePage">Back to your recipes</a>
-      </div>
-    </section>
-
-    <section v-else-if="currentPage === 'recipe-form'" class="detail-page form-page">
-      <a class="back-link" href="#/share" @click.prevent="openSharePage">← Back to your recipes</a>
-      <div class="form-page-heading">
-        <p class="eyebrow">From your bar to the community</p>
-        <h1>{{ editingRecipeId ? 'Edit your recipe' : 'Create a recipe' }}</h1>
-        <p>Tell everyone how to make your cocktail.</p>
-      </div>
-      <form class="recipe-editor" @submit.prevent="saveOwnedRecipe">
-        <label>
-          Recipe name
-          <input v-model.trim="recipeForm.title" required maxlength="100" placeholder="e.g. Sunset Spritz" />
-        </label>
-        <label>
-          Description
-          <textarea v-model.trim="recipeForm.description" required maxlength="1000" rows="4" placeholder="Describe the taste and character of your cocktail"></textarea>
-        </label>
-
-        <label class="photo-picker">
-          Recipe photo <span>(optional)</span>
-          <input type="file" accept="image/*" @change="handlePhotoChange" />
-        </label>
-        <div v-if="recipeForm.image" class="photo-preview">
-          <img :src="recipeForm.image" alt="Recipe photo preview" />
-          <button type="button" class="text-button" @click="recipeForm.image = ''">Remove photo</button>
-        </div>
-        <p v-if="photoError" class="form-error" role="alert">{{ photoError }}</p>
-
-        <fieldset class="editor-fieldset">
-          <legend>Ingredients and quantities</legend>
-          <div v-for="(ingredient, index) in recipeForm.ingredients" :key="ingredient.id" class="ingredient-editor-row">
-            <label>
-              Ingredient
-              <input v-model.trim="ingredient.name" required placeholder="e.g. White rum" />
-            </label>
-            <label>
-              Quantity
-              <input v-model.number="ingredient.quantity" required type="number" min="0.01" step="any" placeholder="5" />
-            </label>
-            <label>
-              Unit
-              <input v-model.trim="ingredient.unit" required maxlength="20" placeholder="cl, ml, slice..." />
-            </label>
-            <button v-if="recipeForm.ingredients.length > 1" class="remove-row-button" type="button" :aria-label="`Remove ingredient ${index + 1}`" @click="removeIngredient(index)">Remove</button>
-          </div>
-          <button class="text-button" type="button" @click="addIngredient">+ Add an ingredient</button>
-        </fieldset>
-
-        <fieldset class="editor-fieldset">
-          <legend>Preparation steps</legend>
-          <div v-for="(step, index) in recipeForm.steps" :key="step.id" class="step-editor-row">
-            <span class="step-number">{{ index + 1 }}</span>
-            <label>
-              Step {{ index + 1 }}
-              <textarea v-model.trim="step.instruction" required rows="2" placeholder="Describe what to do"></textarea>
-            </label>
-            <button v-if="recipeForm.steps.length > 1" class="remove-row-button" type="button" :aria-label="`Remove step ${index + 1}`" @click="removeStep(index)">Remove</button>
-          </div>
-          <button class="text-button" type="button" @click="addStep">+ Add a step</button>
-        </fieldset>
-
-        <label class="difficulty-field">
-          Difficulty
-          <select v-model="recipeForm.difficulty" required>
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-          </select>
-        </label>
-        <p v-if="formError" class="form-error" role="alert">{{ formError }}</p>
-        <div class="editor-actions">
-          <button class="create-button" type="submit">{{ editingRecipeId ? 'Save changes' : 'Publish recipe' }}</button>
-          <button class="text-button" type="button" @click="openSharePage">Cancel</button>
-        </div>
-      </form>
-    </section>
-
-    <section v-else-if="currentPage === 'signup' || currentPage === 'signin'" class="detail-page auth-page">
-      <div class="auth-card">
-        <p class="eyebrow">{{ currentPage === 'signup' ? 'Join the community' : 'Welcome back' }}</p>
-        <h1>{{ currentPage === 'signup' ? 'New account?' : 'Sign in' }}</h1>
-        <p class="auth-note">Accounts are saved only in this browser.</p>
-        <form class="recipe-editor auth-form" @submit.prevent="submitAuthForm">
-          <label v-if="currentPage === 'signup'">
-            Username
-            <input v-model.trim="authForm.username" required maxlength="50" autocomplete="username" />
-          </label>
-          <label>
-            Email address
-            <input v-model.trim="authForm.email" required type="email" maxlength="100" autocomplete="email" />
-          </label>
-          <label>
-            Password
-            <input v-model="authForm.password" required type="password" minlength="8" :autocomplete="currentPage === 'signup' ? 'new-password' : 'current-password'" />
-          </label>
-          <p v-if="authError" class="form-error" role="alert">{{ authError }}</p>
-          <button class="create-button" type="submit">{{ currentPage === 'signup' ? 'Create account' : 'Sign in' }}</button>
-        </form>
-        <a class="auth-switch" :href="currentPage === 'signup' ? '#/signin' : '#/signup'" @click.prevent="openAuthPage(currentPage === 'signup' ? 'signin' : 'signup')">
-          {{ currentPage === 'signup' ? 'Already have an account? Sign in' : 'New here? Create an account' }}
-        </a>
-      </div>
-    </section>
-
-    <section v-else-if="currentPage === 'profile'" class="detail-page profile-page">
-      <div class="form-page-heading">
-        <p class="eyebrow">Your account</p>
-        <h1>Your profile</h1>
-      </div>
-      <div class="profile-layout">
-        <form class="recipe-editor profile-editor" @submit.prevent="saveProfile">
-          <div class="profile-avatar">
-            <img v-if="profileForm.photo" :src="profileForm.photo" alt="Profile photo" />
-            <span v-else aria-hidden="true">{{ currentUser?.username.slice(0, 1).toUpperCase() }}</span>
-          </div>
-          <label>
-            Username
-            <input v-model.trim="profileForm.username" required maxlength="50" autocomplete="username" />
-          </label>
-          <label>
-            Email address
-            <input :value="currentUser?.email" type="email" readonly />
-          </label>
-          <label>
-            Password
-            <input value="••••••••" type="text" readonly aria-label="Password saved and hidden" />
-          </label>
-          <label>
-            Description <span class="optional-label">(optional)</span>
-            <textarea v-model.trim="profileForm.bio" maxlength="500" rows="4" placeholder="Tell the community a little about yourself"></textarea>
-          </label>
-          <label class="photo-picker">
-            Profile photo <span class="optional-label">(optional, 1 MB max)</span>
-            <input type="file" accept="image/*" @change="handleProfilePhotoChange" />
-          </label>
-          <button v-if="profileForm.photo" class="text-button" type="button" @click="profileForm.photo = ''">Remove photo</button>
-          <p v-if="profileError" class="form-error" role="alert">{{ profileError }}</p>
-          <p v-if="profileMessage" class="profile-message" role="status">{{ profileMessage }}</p>
-          <button class="create-button" type="submit">Save profile</button>
-        </form>
-        <div class="profile-side">
-          <form class="recipe-editor password-editor" @submit.prevent="changePassword">
-            <h2>Change password</h2>
-            <label>
-              Current password
-              <input v-model="passwordForm.current" required type="password" autocomplete="current-password" />
-            </label>
-            <label>
-              New password
-              <input v-model="passwordForm.next" required type="password" minlength="8" autocomplete="new-password" />
-            </label>
-            <p v-if="passwordError" class="form-error" role="alert">{{ passwordError }}</p>
-            <p v-if="passwordMessage" class="profile-message" role="status">{{ passwordMessage }}</p>
-            <button class="create-button" type="submit">Update password</button>
-          </form>
-          <section class="profile-recipes">
-            <h2>Your recipes</h2>
-            <div v-if="ownedRecipes.length" class="recipe-list">
-              <div
-                v-for="recipe in ownedRecipes"
-                :key="recipe.recipe_id"
-                class="recipe-list-item"
-              >
-                <a
-                  class="recipe-row"
-                  :href="ownedRecipeHref(recipe)"
-                  @click.prevent="openOwnedRecipe(recipe)"
-                >
-                  <img v-if="recipe.image" class="recipe-row-image" :src="recipe.image" :alt="recipe.title" />
-                  <div v-else class="recipe-row-image recipe-image-placeholder" aria-hidden="true">🍸</div>
-                  <div class="recipe-row-copy">
-                    <h3>{{ recipe.title }}</h3>
-                    <p>{{ recipe.description }}</p>
-                  </div>
-                </a>
-                <button
-                  class="favorite-button"
-                  :class="{ 'is-favorite': isFavorite(recipe) }"
-                  type="button"
-                  :aria-label="isFavorite(recipe) ? `Remove ${recipe.title} from favorites` : `Add ${recipe.title} to favorites`"
-                  :aria-pressed="isFavorite(recipe)"
-                  @click="toggleFavorite(recipe)"
-                ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" /></svg></button>
-              </div>
-            </div>
-            <p v-else class="no-owned-recipes">You have not created any recipes yet.</p>
-            <button class="text-button" type="button" @click="signOut">Sign out</button>
-          </section>
-        </div>
-      </div>
-    </section>
+    <ProfilePage v-else-if="currentPage === 'profile'" />
   </main>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, provide, ref } from 'vue'
+import RecipesPage from './pages/RecipesPage.vue'
+import RecipeDetailPage from './pages/RecipeDetailPage.vue'
+import UsersPage from './pages/UsersPage.vue'
+import UserProfilePage from './pages/UserProfilePage.vue'
+import SharePage from './pages/SharePage.vue'
+import AlbumPage from './pages/AlbumPage.vue'
+import OwnedRecipePage from './pages/OwnedRecipePage.vue'
+import RecipeFormPage from './pages/RecipeFormPage.vue'
+import AuthPage from './pages/AuthPage.vue'
+import ProfilePage from './pages/ProfilePage.vue'
 import cocktailData from '../../bananasplit.json'
 import cocktailVideo from '../Images/4K Free Stock Footage Halloween Cocktail in Dark Bar with Dramatic Red Light.mp4'
 import fiveIngredientPunchImage from '../Images/Five_Ingredient_Punch.jpg'
@@ -1656,6 +1004,60 @@ function submitReview() {
   reviewDraft.value = { rating: '', comment: '' }
 }
 
+provide('page-context', {
+  currentPage,
+  currentUser,
+  ownedRecipes,
+  ownedRecipe,
+  ownedRecipeHref,
+  openOwnedRecipe,
+  openSharePage,
+  openCreatePage,
+  openEditPage,
+  deleteOwnedRecipe,
+  isFavorite,
+  toggleFavorite,
+  formError,
+  userAlbums,
+  selectedAlbumId,
+  selectedAlbum,
+  displayedFavoriteRecipes,
+  recipesInAlbum,
+  deleteAlbum,
+  albumError,
+  albumIdForRecipe,
+  openRecipe,
+  recipeHref,
+  assignRecipeToAlbum,
+  openAlbumCreatePage,
+  albumForm,
+  albumColors,
+  createAlbum,
+  recipeForm,
+  handlePhotoChange,
+  photoError,
+  saveOwnedRecipe,
+  addIngredient,
+  removeIngredient,
+  addStep,
+  removeStep,
+  editingRecipeId,
+  authForm,
+  authError,
+  submitAuthForm,
+  openAuthPage,
+  profileForm,
+  handleProfilePhotoChange,
+  profileError,
+  profileMessage,
+  saveProfile,
+  passwordForm,
+  passwordError,
+  passwordMessage,
+  changePassword,
+  signOut,
+})
+
 onMounted(() => {
   window.addEventListener('popstate', syncRoute)
   window.addEventListener('hashchange', syncRoute)
@@ -1780,10 +1182,8 @@ a { color: inherit; }
 .public-user-details dd { min-width: 0; margin: 0; font-size: 13px; overflow-wrap: anywhere; }
 .public-user-details a { color: var(--orange); text-decoration: none; }
 .back-link { display: inline-block; margin: 0 0 24px; color: var(--orange); font-size: 13px; font-weight: 800; text-decoration: none; }
-.detail-card { display: grid; grid-template-columns: minmax(280px, .85fr) 1.15fr; overflow: hidden; border: 2px solid var(--ink); border-radius: 18px; background: var(--cream); box-shadow: 6px 7px 0 #f5a06e; }
 .detail-image { width: 100%; height: 100%; min-height: 340px; background: #f8dec7; object-fit: cover; }
-.detail-intro { align-self: center; padding: 35px; }
-.detail-intro h1, .not-found h1 { margin: 0 0 14px; font-family: 'Playfair Display', serif; font-size: clamp(38px, 5vw, 58px); line-height: 1; }
+.not-found h1 { margin: 0 0 14px; font-family: 'Playfair Display', serif; font-size: clamp(38px, 5vw, 58px); line-height: 1; }
 .detail-description { color: var(--muted); font-size: 15px; line-height: 1.65; }
 .detail-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
 .detail-stats span { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--muted); font-size: 11px; font-weight: 700; }
