@@ -859,6 +859,7 @@ const displayedFavoriteRecipes = computed(() => favoriteRecipes.value.filter((re
   !selectedAlbumId.value || albumIdForRecipe(recipe) === selectedAlbumId.value
 )))
 
+
 function ratingFor(recipeId) {
   const recipeRatings = reviews.value.filter((review) => review.recipe_id === recipeId)
   if (!recipeRatings.length) return '0.0'
@@ -917,6 +918,7 @@ function readRoute() {
   if (route === '#/profile') return { page: 'profile', recipeId: null }
   if (route === '#/album') return { page: 'album', recipeId: null }
   if (route === '#/album/create') return { page: 'album-create', recipeId: null }
+
   const recipeMatch = route.match(/^#\/recipes\/(\d+)$/)
   if (recipeMatch) return { page: 'recipes', recipeId: Number(recipeMatch[1]) }
   const ownedRecipeMatch = route.match(/^#\/share\/recipes\/(\d+)$/)
@@ -991,11 +993,11 @@ function openAlbumPage() {
   favoritesError.value = ''
   albumError.value = ''
   selectedAlbumId.value = null
+
   window.history.pushState(null, '', '#/album')
   currentRoute.value = { page: 'album', recipeId: null }
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
-
 function openAlbumCreatePage() {
   if (!currentUser.value) {
     openAuthPage('signin')
@@ -1087,7 +1089,6 @@ function assignRecipeToAlbum(recipe, event) {
     favoritesError.value = 'The recipe could not be moved to that fridge. Please try again.'
   }
 }
-
 function isFavorite(recipe) {
   return Boolean(currentUser.value?.favoriteRecipeIds?.includes(recipe.recipe_id))
 }
