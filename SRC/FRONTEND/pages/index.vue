@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import logoUrl from '../../Images/bananasplit_logo.jpg'
-import logoHover from '../../Images/bananasplit_logo_animated.gif'
 
 const isDark = ref(false)
 
@@ -68,6 +67,7 @@ function toggleTheme() {
   --text: #202020;
   --nav-text: #202020;
   --button: #f28c00;
+  --button-fixed: #f28c00;
   --button-hover: #ffbd45;
   --header-shadow: 0 2px 12px rgb(0 0 0 / 10%);
 }
@@ -122,7 +122,7 @@ body {
 }
 
 .logo-link:hover .logo {
-  content: url('../../Images/bananasplit_logo_animate.gif');
+  content: url('../../Images/bananasplit_logo_animated.gif');
 }
 
 .nav-links {
