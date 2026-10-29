@@ -260,7 +260,7 @@
       "title": "Strawberry, Raspberry and Blueberry Milkshake",
       "category": "Milkshake",
       "description": "A creamy milkshake blended with fresh strawberries, raspberries, blueberries and vanilla ice cream.",
-      "photo_url": "../Images/milkshake_ffm.jpg",
+      "photo_url": "src/assets/milkshake_ffm.jpg",
       "preparation_time": 300,
       "glass_name": "Milkshake glass",
       "capacity_cl": 35
@@ -271,7 +271,7 @@
       "title": "Mojito",
       "category": "Cocktail",
       "description": "A refreshing mix of white rum, mint, lime, sugar and soda water.",
-      "photo_url": "../Images/mojito.jpg",
+      "photo_url": "src/assets/mojito.jpg",
       "preparation_time": 300,
       "glass_name": "Highball",
       "capacity_cl": 30
@@ -282,7 +282,7 @@
       "title": "Cappuccino",
       "category": "Coffee",
       "description": "Espresso topped with steamed milk and a layer of milk foam.",
-      "photo_url": "../Images/cappuccino.jpg",
+      "photo_url": "src/assets/cappuccino.jpg",
       "preparation_time": 240,
       "glass_name": "Cappuccino cup",
       "capacity_cl": 18

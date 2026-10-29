@@ -1,6 +1,6 @@
 <script setup>
 import { RouterLink } from 'vue-router'
-import backgroundVideo from '../../Images/fond_page_accueil.mp4'
+import backgroundVideo from '../assets/fond_page_accueil.mp4'
 </script>
 
 <template>

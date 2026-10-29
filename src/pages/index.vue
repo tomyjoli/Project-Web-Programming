@@ -1,9 +1,11 @@
 <script setup>
 import { ref } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
-import logoUrl from '../../Images/bananasplit_logo.jpg'
+import logoUrl from '../assets/bananasplit_logo.jpg'
+import logoHover from '../assets/bananasplit_logo_animated.gif'
 
 const isDark = ref(false)
+const isLogoHovered = ref(false)
 
 function toggleTheme() {
   isDark.value = !isDark.value
@@ -16,7 +18,13 @@ function toggleTheme() {
     <header class="site-header">
       <div class="header-content">
         <RouterLink class="logo-link" to="/" aria-label="Banana Split home">
-          <img :src="logoUrl" alt="Banana Split" class="logo">
+          <img
+            :src="isLogoHovered ? logoHover : logoUrl"
+            alt="Banana Split"
+            class="logo"
+            @mouseenter="isLogoHovered = true"
+            @mouseleave="isLogoHovered = false"
+          >
         </RouterLink>
 
         <nav aria-label="Main navigation">
@@ -120,10 +128,6 @@ body {
   display: block;
   width: auto;
   height: 50px;
-}
-
-.logo-link:hover .logo {
-  content: url('../../Images/bananasplit_logo_animated.gif');
 }
 
 .nav-links {

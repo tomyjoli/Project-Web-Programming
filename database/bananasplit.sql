@@ -106,9 +106,9 @@ INSERT INTO RECIPE (recipe_id, user_id, title, category, description, photo_url,
 (5, 5, 'Five Ingredient Punch', 'Punch', 'A balanced punch made with all five available ingredients.', 'https://example.com/five-ingredient-punch.jpg', 900, 'Punch glass', 40);
 
 INSERT INTO RECIPE (recipe_id, user_id, title, category, description, photo_url, preparation_time, glass_name, capacity_cl) VALUES
-(6, 1, 'Strawberry, Raspberry and Blueberry Milkshake', 'Milkshake', 'A creamy milkshake blended with fresh strawberries, raspberries, blueberries and vanilla ice cream.', '../Images/milkshake_ffm.jpg', 300, 'Milkshake glass', 35),
-(9, 4, 'Mojito', 'Cocktail', 'A refreshing mix of white rum, mint, lime, sugar and soda water.', '../Images/mojito.jpg', 300, 'Highball', 30),
-(10, 5, 'Cappuccino', 'Coffee', 'Espresso topped with steamed milk and a layer of milk foam.', '../Images/cappuccino.jpg', 240, 'Cappuccino cup', 18);
+(6, 1, 'Strawberry, Raspberry and Blueberry Milkshake', 'Milkshake', 'A creamy milkshake blended with fresh strawberries, raspberries, blueberries and vanilla ice cream.', 'src/assets/milkshake_ffm.jpg', 300, 'Milkshake glass', 35),
+(9, 4, 'Mojito', 'Cocktail', 'A refreshing mix of white rum, mint, lime, sugar and soda water.', 'src/assets/mojito.jpg', 300, 'Highball', 30),
+(10, 5, 'Cappuccino', 'Coffee', 'Espresso topped with steamed milk and a layer of milk foam.', 'src/assets/cappuccino.jpg', 240, 'Cappuccino cup', 18);
 
 INSERT INTO RECIPE_INGREDIENT (recipe_id, ingredient_id, quantity, unit_of_measure) VALUES
 (1, 1, 4.00, 'cl'),

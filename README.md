@@ -30,7 +30,7 @@ The database is normalized and structured around **6 core entities**. The full E
 | :--- | :--- | :--- | :--- |
 | **`USER`** | `user_id` | — | Registered members (`username`, `email`, `password`, `bio`, `date_of_birth`, `profile_picture_url`, `created_at`). |
 | **`INGREDIENT`** | `ingredient_id` | — | Bar & kitchen items (`ingredient_name`, `alcohol_degree`, `allergens`, `average_price`, `category_name`, `is_legal`). |
-| **`RECIPE`** | `recipe_id` | `user_id` | Cocktail datasheets (`title`, `description`, `photo_url`, `created_at`, `glass_name`, `capacity_cl`). |
+| **`RECIPE`** | `recipe_id` | `user_id` | Recipe details (`title`, `category`, `description`, `photo_url`, `created_at`, `glass_name`, `capacity_cl`). |
 | **`RECIPE_INGREDIENT`** | `recipe_id`, `ingredient_id` | `recipe_id`, `ingredient_id` | Associative table linking recipes and ingredients with exact `quantity` and `unit_of_measure`. |
 | **`PREPARATION_STEP`** | `step_id` | `recipe_id` | Ordered instructions for a cocktail (`step_number`, `instruction`). |
 | **`REVIEW`** | `review_id` | `user_id`, `recipe_id` | User feedback on cocktails (`rating`, `comment`, `created_at`, `Upvote`, `Downvote`). |
@@ -41,21 +41,26 @@ The database is normalized and structured around **6 core entities**. The full E
 
 ```text
 Project-Web-Programming/
-├── SRC/
-│   ├── FRONTEND/
-│   │   ├── index.html
-│   │   ├── main.js
-│   │   ├── index.vue
-│   │   ├── package.json
-│   │   └── vite.config.js
-│   └── Images/
-├── Diagrams/
-│   ├── MLD + ER diagram LECLANCHE Antonin & GARRIDO Tom.pdf
-│   ├── use-case-diagram_antom.vpp
-│   ├── Gantt_Projet_Banana_Split.xlsx
-├── bananasplit.sql
-├── bananasplit.json
+├── index.html
+├── vite.config.js
+├── package.json
 ├── package-lock.json
+├── src/
+│   ├── main.js
+│   ├── router.js
+│   ├── assets/
+│   ├── data/
+│   │   └── bananasplit.json
+│   └── pages/
+│       ├── index.vue
+│       ├── main.vue
+│       ├── recipe.vue
+│       ├── ingredient.vue
+│       ├── share.vue
+│       ├── users.vue
+│       └── album.vue
+├── database/
+│   └── bananasplit.sql
 ├── .gitignore
 └── README.md
 ```
@@ -64,7 +69,7 @@ Project-Web-Programming/
 ## 📅 Project Roadmap & Deliverables Summary
 
 * [x] **SEP/10:** Team formation, topic definition, CRUD plan, ER & Table Structure diagrams.
-* [x] **SEP/17:** Full SQL script (`DROP` / `CREATE` / `INSERT`), mock JSON dataset (`bananasplit.json`), `.gitignore`, and initial `README.md`.
+* [x] **SEP/17:** Full SQL script (`DROP` / `CREATE` / `INSERT`), mock JSON dataset ([`src/data/bananasplit.json`](./src/data/bananasplit.json)), `.gitignore`, and initial `README.md`.
 * [x] **OCT/15:** Project-level UML Use Case diagram, Planned Gantt chart, Vue.js Frontend with 3+ list/table/reader views powered by JSON, and multi-branch Git workflow.
 * [ ] **OCT/29:** Member-level UML diagrams (Wireframe, Activity, Sequence) & Full Frontend CRUD with JSON.
 * [ ] **NOV/26:** Component & Class diagrams + Express.js MVC Backend repository.

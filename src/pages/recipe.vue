@@ -1,14 +1,14 @@
 <script setup>
 import { computed, ref } from 'vue'
-import recipeData from '../../../bananasplit.json'
-import pineappleVodkaImage from '../../Images/pineapple_vodka.jpg'
-import rumSunriseImage from '../../Images/rum_sunrise.jpg'
-import limeGrenadineFizzImage from '../../Images/lime_grenadine_fizz.jpg'
-import tropicalRumCoolerImage from '../../Images/Tropical_Rum_Cooler.jpg'
-import fiveIngredientPunchImage from '../../Images/Five_Ingredient_Punch.jpg'
-import milkshakeImage from '../../Images/milkshake_ffm.jpg'
-import mojitoImage from '../../Images/mojito.jpg'
-import cappuccinoImage from '../../Images/cappuccino.jpg'
+import recipeData from '../data/bananasplit.json'
+import pineappleVodkaImage from '../assets/pineapple_vodka.jpg'
+import rumSunriseImage from '../assets/rum_sunrise.jpg'
+import limeGrenadineFizzImage from '../assets/lime_grenadine_fizz.jpg'
+import tropicalRumCoolerImage from '../assets/Tropical_Rum_Cooler.jpg'
+import fiveIngredientPunchImage from '../assets/Five_Ingredient_Punch.jpg'
+import milkshakeImage from '../assets/milkshake_ffm.jpg'
+import mojitoImage from '../assets/mojito.jpg'
+import cappuccinoImage from '../assets/cappuccino.jpg'
 
 const searchText = ref('')
 const selectedIngredient = ref('')
