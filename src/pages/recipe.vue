@@ -219,13 +219,29 @@ function toggleSection(sectionId) {
 }
 
 .recipes-introduction h1 {
-  margin: 0 0 12px;
-  font-size: 36px;
+  margin: 0 0 16px;
+  font-family: "Press Start 2P", "Terminal", "Courier New", monospace;
+  font-size: clamp(22px, 4vw, 36px);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  text-shadow: 3px 3px 0 var(--button);
+}
+
+.recipes-introduction h1::before {
+  display: block;
+  margin-bottom: 8px;
+  font-family: sans-serif;
+  font-size: 32px;
+  letter-spacing: normal;
+  text-shadow: none;
 }
 
 .recipes-introduction p {
   margin: 0;
   color: var(--nav-text);
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 .recipe-search {
