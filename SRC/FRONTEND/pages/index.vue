@@ -62,7 +62,7 @@ function toggleTheme() {
 <style>
 :root {
   color-scheme: light;
-  --page-bg: #ffffff;
+  --page-bg: #fff3cf;
   --surface: #ffffff;
   --text: #202020;
   --nav-text: #202020;

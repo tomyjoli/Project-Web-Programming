@@ -96,6 +96,106 @@
       "image_url":"https://example.com/ingredients/lime.jpg",
       "is_legal":true,
       "category_name": "Juice"
+    },
+    {
+      "ingredient_id": 6,
+      "ingredient_name": "Milk",
+      "alcohol_degree": 0.0,
+      "allergens": "Milk",
+      "average_price": 1.50,
+      "image_url": null,
+      "is_legal": true,
+      "category_name": "Dairy"
+    },
+    {
+      "ingredient_id": 7,
+      "ingredient_name": "Strawberries",
+      "alcohol_degree": 0.0,
+      "allergens": null,
+      "average_price": 3.50,
+      "image_url": null,
+      "is_legal": true,
+      "category_name": "Fruit"
+    },
+    {
+      "ingredient_id": 8,
+      "ingredient_name": "Raspberries",
+      "alcohol_degree": 0.0,
+      "allergens": null,
+      "average_price": 4.00,
+      "image_url": null,
+      "is_legal": true,
+      "category_name": "Fruit"
+    },
+    {
+      "ingredient_id": 9,
+      "ingredient_name": "Blueberries",
+      "alcohol_degree": 0.0,
+      "allergens": null,
+      "average_price": 3.80,
+      "image_url": null,
+      "is_legal": true,
+      "category_name": "Fruit"
+    },
+    {
+      "ingredient_id": 10,
+      "ingredient_name": "Vanilla ice cream",
+      "alcohol_degree": 0.0,
+      "allergens": "Milk",
+      "average_price": 4.00,
+      "image_url": null,
+      "is_legal": true,
+      "category_name": "Dairy"
+    },
+    {
+      "ingredient_id": 11,
+      "ingredient_name": "Fresh mint",
+      "alcohol_degree": 0.0,
+      "allergens": null,
+      "average_price": 1.50,
+      "image_url": null,
+      "is_legal": true,
+      "category_name": "Herb"
+    },
+    {
+      "ingredient_id": 12,
+      "ingredient_name": "Sugar",
+      "alcohol_degree": 0.0,
+      "allergens": null,
+      "average_price": 1.00,
+      "image_url": null,
+      "is_legal": true,
+      "category_name": "Sweetener"
+    },
+    {
+      "ingredient_id": 13,
+      "ingredient_name": "Soda water",
+      "alcohol_degree": 0.0,
+      "allergens": null,
+      "average_price": 1.00,
+      "image_url": null,
+      "is_legal": true,
+      "category_name": "Mixer"
+    },
+    {
+      "ingredient_id": 14,
+      "ingredient_name": "Ice",
+      "alcohol_degree": 0.0,
+      "allergens": null,
+      "average_price": 0.50,
+      "image_url": null,
+      "is_legal": true,
+      "category_name": "Other"
+    },
+    {
+      "ingredient_id": 15,
+      "ingredient_name": "Espresso coffee",
+      "alcohol_degree": 0.0,
+      "allergens": null,
+      "average_price": 3.00,
+      "image_url": null,
+      "is_legal": true,
+      "category_name": "Coffee"
     }
   ],
   "recipes": [
@@ -103,6 +203,7 @@
       "recipe_id": 1,
       "user_id": 1,
       "title": "Pineapple Vodka",
+      "category": "Cocktail",
       "description": "A fresh cocktail combining vodka, pineapple and lime.",
       "photo_url": "https://example.com/pineapple-vodka.jpg",
       "preparation_time" :300,
@@ -113,6 +214,7 @@
       "recipe_id": 2,
       "user_id": 2,
       "title": "Rum Sunrise",
+      "category": "Cocktail",
       "description": "A fruity rum cocktail with pineapple and grenadine.",
       "photo_url": "https://example.com/rum-sunrise.jpg",
       "preparation_time" :420,
@@ -123,6 +225,7 @@
       "recipe_id": 3,
       "user_id": 3,
       "title": "Lime Grenadine Fizz",
+      "category": "Cocktail",
       "description": "A bright vodka cocktail with lime and grenadine.",
       "photo_url": "https://example.com/lime-grenadine-fizz.jpg",
       "preparation_time" :300,
@@ -133,6 +236,7 @@
       "recipe_id": 4,
       "user_id": 4,
       "title": "Tropical Rum Cooler",
+      "category": "Cocktail",
       "description": "A refreshing blend of white rum, pineapple and lime.",
       "photo_url": "https://example.com/tropical-rum-cooler.jpg",
       "preparation_time" :480,
@@ -143,11 +247,45 @@
       "recipe_id": 5,
       "user_id": 5,
       "title": "Five Ingredient Punch",
+      "category": "Punch",
       "description": "A balanced punch made with all five available ingredients.",
       "photo_url": "https://example.com/five-ingredient-punch.jpg",
       "preparation_time" :900,
       "glass_name": "Punch glass",
       "capacity_cl": 40
+    },
+    {
+      "recipe_id": 6,
+      "user_id": 1,
+      "title": "Strawberry, Raspberry and Blueberry Milkshake",
+      "category": "Milkshake",
+      "description": "A creamy milkshake blended with fresh strawberries, raspberries, blueberries and vanilla ice cream.",
+      "photo_url": "../Images/milkshake_ffm.jpg",
+      "preparation_time": 300,
+      "glass_name": "Milkshake glass",
+      "capacity_cl": 35
+    },
+    {
+      "recipe_id": 9,
+      "user_id": 4,
+      "title": "Mojito",
+      "category": "Cocktail",
+      "description": "A refreshing mix of white rum, mint, lime, sugar and soda water.",
+      "photo_url": "../Images/mojito.jpg",
+      "preparation_time": 300,
+      "glass_name": "Highball",
+      "capacity_cl": 30
+    },
+    {
+      "recipe_id": 10,
+      "user_id": 5,
+      "title": "Cappuccino",
+      "category": "Coffee",
+      "description": "Espresso topped with steamed milk and a layer of milk foam.",
+      "photo_url": "../Images/cappuccino.jpg",
+      "preparation_time": 240,
+      "glass_name": "Cappuccino cup",
+      "capacity_cl": 18
     }
   ],
   "recipe_ingredients": [
@@ -167,7 +305,20 @@
     { "recipe_id": 5, "ingredient_id": 2, "quantity": 3.0, "unit_of_measure": "cl" },
     { "recipe_id": 5, "ingredient_id": 3, "quantity": 15.0, "unit_of_measure": "cl" },
     { "recipe_id": 5, "ingredient_id": 4, "quantity": 1.0, "unit_of_measure": "cl" },
-    { "recipe_id": 5, "ingredient_id": 5, "quantity": 2.0, "unit_of_measure": "cl" }
+    { "recipe_id": 5, "ingredient_id": 5, "quantity": 2.0, "unit_of_measure": "cl" },
+    { "recipe_id": 6, "ingredient_id": 6, "quantity": 15.0, "unit_of_measure": "cl" },
+    { "recipe_id": 6, "ingredient_id": 7, "quantity": 50.0, "unit_of_measure": "g" },
+    { "recipe_id": 6, "ingredient_id": 8, "quantity": 50.0, "unit_of_measure": "g" },
+    { "recipe_id": 6, "ingredient_id": 9, "quantity": 50.0, "unit_of_measure": "g" },
+    { "recipe_id": 6, "ingredient_id": 10, "quantity": 2.0, "unit_of_measure": "scoops" },
+    { "recipe_id": 9, "ingredient_id": 2, "quantity": 5.0, "unit_of_measure": "cl" },
+    { "recipe_id": 9, "ingredient_id": 5, "quantity": 2.0, "unit_of_measure": "cl" },
+    { "recipe_id": 9, "ingredient_id": 11, "quantity": 8.0, "unit_of_measure": "leaves" },
+    { "recipe_id": 9, "ingredient_id": 12, "quantity": 2.0, "unit_of_measure": "tsp" },
+    { "recipe_id": 9, "ingredient_id": 13, "quantity": 10.0, "unit_of_measure": "cl" },
+    { "recipe_id": 9, "ingredient_id": 14, "quantity": 1.0, "unit_of_measure": "cup" },
+    { "recipe_id": 10, "ingredient_id": 15, "quantity": 3.0, "unit_of_measure": "cl" },
+    { "recipe_id": 10, "ingredient_id": 6, "quantity": 12.0, "unit_of_measure": "cl" }
   ],
   "preparation_steps": [
     {
@@ -199,6 +350,24 @@
       "recipe_id": 5,
       "step_number": 1,
       "instruction": "Shake the vodka, white rum, pineapple juice and lime juice with ice, then add grenadine."
+    },
+    {
+      "step_id": 6,
+      "recipe_id": 6,
+      "step_number": 1,
+      "instruction": "Blend the strawberries, raspberries, blueberries, milk and vanilla ice cream until smooth."
+    },
+    {
+      "step_id": 9,
+      "recipe_id": 9,
+      "step_number": 1,
+      "instruction": "Muddle the mint, lime juice and sugar. Add white rum and ice, top with soda water, and stir gently."
+    },
+    {
+      "step_id": 10,
+      "recipe_id": 10,
+      "step_number": 1,
+      "instruction": "Prepare an espresso, steam the milk, and pour it over the espresso with milk foam on top."
     }
   ],
   "reviews": [
@@ -224,7 +393,7 @@
       "review_id": 3,
       "user_id": 4,
       "recipe_id": 3,
-      "rating": 4,
+      "rating": 2,
       "comment": "A bright cocktail with a pleasant lime taste.",
       "upvote":false,
       "downvote":false
@@ -244,6 +413,15 @@
       "recipe_id": 5,
       "rating": 5,
       "comment": "A complete and fruity punch with a nice citrus finish.",
+      "upvote":false,
+      "downvote":false
+    },
+    {
+      "review_id": 6,
+      "user_id": 2,
+      "recipe_id": 9,
+      "rating": 5,
+      "comment": "Le mojito c'est la meilleure boisson.",
       "upvote":false,
       "downvote":false
     }

@@ -31,6 +31,7 @@ CREATE TABLE RECIPE (
     recipe_id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     title VARCHAR(100) NOT NULL,
+    category VARCHAR(100) NOT NULL,
     description TEXT,
     photo_url VARCHAR(255),
     preparation_time INT,
@@ -85,12 +86,29 @@ INSERT INTO INGREDIENT (ingredient_id, ingredient_name, alcohol_degree, allergen
 (4, 'Grenadine', 0.0, NULL, 3.20, 'https://example.com/ingredients/grena.jpg', TRUE, 'Syrup'),
 (5, 'Lime juice', 0.0, NULL, 1.80, 'https://example.com/ingredients/lime.jpg', TRUE, 'Juice');
 
-INSERT INTO RECIPE (recipe_id, user_id, title, description, photo_url, preparation_time, glass_name, capacity_cl) VALUES
-(1, 1, 'Pineapple Vodka', 'A fresh cocktail combining vodka, pineapple and lime.', 'https://example.com/pineapple-vodka.jpg', 300, 'Highball', 30),
-(2, 2, 'Rum Sunrise', 'A fruity rum cocktail with pineapple and grenadine.', 'https://example.com/rum-sunrise.jpg', 420, 'Hurricane', 30),
-(3, 3, 'Lime Grenadine Fizz', 'A bright vodka cocktail with lime and grenadine.', 'https://example.com/lime-grenadine-fizz.jpg', 300, 'Tumbler', 25),
-(4, 4, 'Tropical Rum Cooler', 'A refreshing blend of white rum, pineapple and lime.', 'https://example.com/tropical-rum-cooler.jpg', 480, 'Collins', 35),
-(5, 5, 'Five Ingredient Punch', 'A balanced punch made with all five available ingredients.', 'https://example.com/five-ingredient-punch.jpg', 900, 'Punch glass', 40);
+INSERT INTO INGREDIENT (ingredient_id, ingredient_name, alcohol_degree, allergens, average_price, image_url, is_legal, category_name) VALUES
+(6, 'Milk', 0.0, 'Milk', 1.50, NULL, TRUE, 'Dairy'),
+(7, 'Strawberries', 0.0, NULL, 3.50, NULL, TRUE, 'Fruit'),
+(8, 'Raspberries', 0.0, NULL, 4.00, NULL, TRUE, 'Fruit'),
+(9, 'Blueberries', 0.0, NULL, 3.80, NULL, TRUE, 'Fruit'),
+(10, 'Vanilla ice cream', 0.0, 'Milk', 4.00, NULL, TRUE, 'Dairy'),
+(11, 'Fresh mint', 0.0, NULL, 1.50, NULL, TRUE, 'Herb'),
+(12, 'Sugar', 0.0, NULL, 1.00, NULL, TRUE, 'Sweetener'),
+(13, 'Soda water', 0.0, NULL, 1.00, NULL, TRUE, 'Mixer'),
+(14, 'Ice', 0.0, NULL, 0.50, NULL, TRUE, 'Other'),
+(15, 'Espresso coffee', 0.0, NULL, 3.00, NULL, TRUE, 'Coffee');
+
+INSERT INTO RECIPE (recipe_id, user_id, title, category, description, photo_url, preparation_time, glass_name, capacity_cl) VALUES
+(1, 1, 'Pineapple Vodka', 'Cocktail', 'A fresh cocktail combining vodka, pineapple and lime.', 'https://example.com/pineapple-vodka.jpg', 300, 'Highball', 30),
+(2, 2, 'Rum Sunrise', 'Cocktail', 'A fruity rum cocktail with pineapple and grenadine.', 'https://example.com/rum-sunrise.jpg', 420, 'Hurricane', 30),
+(3, 3, 'Lime Grenadine Fizz', 'Cocktail', 'A bright vodka cocktail with lime and grenadine.', 'https://example.com/lime-grenadine-fizz.jpg', 300, 'Tumbler', 25),
+(4, 4, 'Tropical Rum Cooler', 'Cocktail', 'A refreshing blend of white rum, pineapple and lime.', 'https://example.com/tropical-rum-cooler.jpg', 480, 'Collins', 35),
+(5, 5, 'Five Ingredient Punch', 'Punch', 'A balanced punch made with all five available ingredients.', 'https://example.com/five-ingredient-punch.jpg', 900, 'Punch glass', 40);
+
+INSERT INTO RECIPE (recipe_id, user_id, title, category, description, photo_url, preparation_time, glass_name, capacity_cl) VALUES
+(6, 1, 'Strawberry, Raspberry and Blueberry Milkshake', 'Milkshake', 'A creamy milkshake blended with fresh strawberries, raspberries, blueberries and vanilla ice cream.', '../Images/milkshake_ffm.jpg', 300, 'Milkshake glass', 35),
+(9, 4, 'Mojito', 'Cocktail', 'A refreshing mix of white rum, mint, lime, sugar and soda water.', '../Images/mojito.jpg', 300, 'Highball', 30),
+(10, 5, 'Cappuccino', 'Coffee', 'Espresso topped with steamed milk and a layer of milk foam.', '../Images/cappuccino.jpg', 240, 'Cappuccino cup', 18);
 
 INSERT INTO RECIPE_INGREDIENT (recipe_id, ingredient_id, quantity, unit_of_measure) VALUES
 (1, 1, 4.00, 'cl'),
@@ -111,12 +129,32 @@ INSERT INTO RECIPE_INGREDIENT (recipe_id, ingredient_id, quantity, unit_of_measu
 (5, 4, 1.00, 'cl'),
 (5, 5, 2.00, 'cl');
 
+INSERT INTO RECIPE_INGREDIENT (recipe_id, ingredient_id, quantity, unit_of_measure) VALUES
+(6, 6, 15.00, 'cl'),
+(6, 7, 50.00, 'g'),
+(6, 8, 50.00, 'g'),
+(6, 9, 50.00, 'g'),
+(6, 10, 2.00, 'scoops'),
+(9, 2, 5.00, 'cl'),
+(9, 5, 2.00, 'cl'),
+(9, 11, 8.00, 'leaves'),
+(9, 12, 2.00, 'tsp'),
+(9, 13, 10.00, 'cl'),
+(9, 14, 1.00, 'cup'),
+(10, 15, 3.00, 'cl'),
+(10, 6, 12.00, 'cl');
+
 INSERT INTO PREPARATION_STEP (step_id, recipe_id, step_number, instruction) VALUES
 (1, 1, 1, 'Shake the vodka, pineapple juice and lime juice with ice, then strain into the glass.'),
 (2, 2, 1, 'Shake the white rum and pineapple juice with ice, then add grenadine before serving.'),
 (3, 3, 1, 'Shake the vodka and lime juice with ice, then pour over ice and add grenadine.'),
 (4, 4, 1, 'Fill the glass with ice, add the white rum and pineapple juice, then finish with lime juice.'),
 (5, 5, 1, 'Shake the vodka, white rum, pineapple juice and lime juice with ice, then add grenadine.');
+
+INSERT INTO PREPARATION_STEP (step_id, recipe_id, step_number, instruction) VALUES
+(6, 6, 1, 'Blend the strawberries, raspberries, blueberries, milk and vanilla ice cream until smooth.'),
+(9, 9, 1, 'Muddle the mint, lime juice and sugar. Add white rum and ice, top with soda water, and stir gently.'),
+(10, 10, 1, 'Prepare an espresso, steam the milk, and pour it over the espresso with milk foam on top.');
 
 INSERT INTO REVIEW (review_id, user_id, recipe_id, rating, comment, upvote, downvote) VALUES
 (1, 2, 1, 5, 'Fresh, fruity and well balanced.', FALSE, FALSE),
