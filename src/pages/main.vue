@@ -1,6 +1,7 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 import backgroundVideo from '../assets/fond_page_accueil.mp4'
+import presentationImage from '../assets/mojito.jpg'
 </script>
 
 <template>
@@ -18,8 +19,29 @@ import backgroundVideo from '../assets/fond_page_accueil.mp4'
           <br>
           starts here.
         </h1>
-        <RouterLink class="search-recipes-button" to="/recipes">
-        Search for recipes
+      </div>
+    </section>
+
+    <section class="presentation">
+      <img
+        class="presentation-image"
+        :src="presentationImage"
+        alt="A freshly prepared mojito"
+      >
+
+      <div class="presentation-text">
+        <h2>Discover, create, and share recipes</h2>
+        <p class="presentation-tagline">
+          Find inspiration for your next drink, one recipe at a time.
+        </p>
+        <p>
+          Banana Split is a place to explore recipes, discover the ingredients
+          that go into them, and share your own creations. Whether you are
+          looking for a new favorite or ready to publish a recipe, everything
+          starts here.
+        </p>
+        <RouterLink class="presentation-button" to="/recipes">
+          Explore the recipes
         </RouterLink>
       </div>
     </section>
@@ -58,22 +80,58 @@ import backgroundVideo from '../assets/fond_page_accueil.mp4'
   text-shadow: 0 2px 8px var(--button);
 }
 
-.search-recipes-button {
+.presentation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 80px 6%;
+  color: var(--text);
+}
+
+.presentation-image {
+  display: block;
+  width: 100%;
+  height: 360px;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: var(--header-shadow);
+}
+
+.presentation-text h2 {
+  margin: 0 0 16px;
+  font-size: clamp(26px, 3vw, 36px);
+}
+
+.presentation-tagline {
+  margin: 0 0 16px;
+  color: var(--button);
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.presentation-text > p:not(.presentation-tagline) {
+  margin: 0;
+  color: var(--nav-text);
+  line-height: 1.7;
+}
+
+.presentation-button {
   display: inline-block;
   margin-top: 24px;
   padding: 12px 20px;
-  border: 2px solid var(--button-fixed);
   border-radius: 6px;
-  background-color: transparent;
+  background-color: var(--button);
   color: #ffffff;
   font-weight: 600;
   text-decoration: none;
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.search-recipes-button:hover {
+.presentation-button:hover {
   background-color: var(--button-hover);
-  border-color: var(--button-hover);
   color: var(--text);
 }
 </style>

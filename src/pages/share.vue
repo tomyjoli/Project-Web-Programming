@@ -16,6 +16,7 @@ const form = ref({
 const ingredients = ref([createIngredient()])
 const steps = ref([createStep()])
 const recipePayload = ref(null)
+const recipeAction = ref('')
 const previewIngredients = computed(() => ingredients.value
   .filter((ingredient) => ingredient.ingredient_id)
   .map((ingredient) => recipeData.ingredients.find(
@@ -50,7 +51,8 @@ function removeStep(index) {
   steps.value.splice(index, 1)
 }
 
-function prepareRecipe() {
+function prepareRecipe(action = 'shared') {
+  recipeAction.value = action
   recipePayload.value = {
     recipe: {
       title: form.value.title,
@@ -61,11 +63,11 @@ function prepareRecipe() {
         ? Number(form.value.preparation_time)
         : null,
       glass_name: form.value.glass_name,
-      capacity_cl: Number(form.value.capacity_cl),
+      capacity_cl: form.value.capacity_cl ? Number(form.value.capacity_cl) : null,
     },
     recipe_ingredients: ingredients.value.map((ingredient) => ({
-      ingredient_id: Number(ingredient.ingredient_id),
-      quantity: Number(ingredient.quantity),
+      ingredient_id: ingredient.ingredient_id ? Number(ingredient.ingredient_id) : null,
+      quantity: ingredient.quantity ? Number(ingredient.quantity) : null,
       unit_of_measure: ingredient.unit_of_measure,
     })),
     preparation_steps: steps.value.map((step, index) => ({
@@ -77,6 +79,7 @@ function prepareRecipe() {
 
 watch([form, ingredients, steps], () => {
   recipePayload.value = null
+  recipeAction.value = ''
 }, { deep: true })
 </script>
 
@@ -223,12 +226,18 @@ watch([form, ingredients, steps], () => {
         <button class="secondary-button" type="button" @click="addStep">+ Add step</button>
       </section>
 
-      <button class="share-button" type="submit">Share recipe</button>
+      <div class="form-actions">
+        <button class="draft-button" type="button" @click="prepareRecipe('draft')">Save as draft</button>
+        <button class="share-button" type="submit">Share recipe</button>
+      </div>
     </form>
 
     <section v-if="recipePayload" class="payload-section" aria-live="polite">
-      <h2>Recipe data</h2>
-      <p>The authenticated user ID will be added when the database API is connected.</p>
+      <h2>{{ recipeAction === 'draft' ? 'Draft preview' : 'Recipe data' }}</h2>
+      <p v-if="recipeAction === 'draft'">
+        This draft is only a preview for now; it is not saved and will be lost when you leave this page.
+      </p>
+      <p v-else>The authenticated user ID will be added when the database API is connected.</p>
       <pre>{{ JSON.stringify(recipePayload, null, 2) }}</pre>
     </section>
   </main>
@@ -456,9 +465,28 @@ watch([form, ingredients, steps], () => {
   color: #ffffff;
 }
 
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.draft-button {
+  align-self: flex-start;
+  padding: 11px 18px;
+  border: 1px solid var(--button);
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--button);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .secondary-button:hover,
 .remove-button:hover:not(:disabled),
-.share-button:hover {
+.share-button:hover,
+.draft-button:hover {
   border-color: var(--button-hover);
   background-color: var(--button-hover);
   color: var(--text);
