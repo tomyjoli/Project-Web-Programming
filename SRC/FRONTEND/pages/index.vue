@@ -23,8 +23,9 @@ function toggleTheme() {
           <ul class="nav-links">
             <li><RouterLink to="/" exact-active-class="active">Home</RouterLink></li>
             <li><RouterLink to="/recipes" active-class="active">Recipes</RouterLink></li>
+            <li><RouterLink to="/share" active-class="active">Share</RouterLink></li>
             <li><RouterLink to="/albums" active-class="active">Albums</RouterLink></li>
-            <li><RouterLink to="/members" active-class="active">Members</RouterLink></li>
+            <li><RouterLink to="/ingredients" active-class="active">Ingredients</RouterLink></li>
           </ul>
         </nav>
 
