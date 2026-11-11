@@ -41,17 +41,16 @@ The database is normalized and structured around **6 core entities**. The full E
 
 ```text
 Project-Web-Programming/
-├── index.html
-├── vite.config.js
-├── package.json
-├── package-lock.json
-├── src/
+├── frontend/
+│   ├── index.html
 │   ├── main.js
 │   ├── router.js
+│   ├── vite.config.js
+│   ├── package.json
 │   ├── assets/
 │   ├── data/
 │   │   └── bananasplit.json
-│   └── pages/
+│   └── src/
 │       ├── index.vue
 │       ├── main.vue
 │       ├── recipe.vue
@@ -59,11 +58,28 @@ Project-Web-Programming/
 │       ├── share.vue
 │       ├── users.vue
 │       └── album.vue
+├── backend/                 # En attente de l'implémentation du serveur
 ├── database/
 │   └── bananasplit.sql
 ├── .gitignore
 └── README.md
 ```
+
+## 🚀 Lancer le frontend
+
+Dans un terminal, place-toi dans le dossier `frontend/` :
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Vite affiche l'adresse locale à ouvrir dans le navigateur. Les autres commandes disponibles dans `frontend/` sont `npm run build` et `npm run preview`.
+
+Le dossier `backend/` ne contient pas encore de serveur : à ce stade, seule l'application frontend peut être lancée. La base SQL est fournie séparément dans `database/bananasplit.sql`.
+
+Les dossiers `frontend/node_modules/` et `frontend/dist/` sont générés et ignorés par Git : le premier contient les dépendances du frontend, le second le résultat de compilation. Ils sont les seuls nécessaires au fonctionnement actuel du projet.
 
 ---
 ## 📅 Project Roadmap & Deliverables Summary

@@ -1,10 +1,10 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import HomePage from './pages/main.vue'
-import RecipesPage from './pages/recipe.vue'
-import AlbumsPage from './pages/album.vue'
-import UsersPage from './pages/users.vue'
-import IngredientsPage from './pages/ingredient.vue'
-import SharePage from './pages/share.vue'
+import HomePage from './src/main.vue'
+import RecipesPage from './src/recipe.vue'
+import AlbumsPage from './src/album.vue'
+import UsersPage from './src/users.vue'
+import IngredientsPage from './src/ingredient.vue'
+import SharePage from './src/share.vue'
 
 export default createRouter({
   history: createWebHashHistory(),
