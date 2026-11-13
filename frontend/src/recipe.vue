@@ -14,6 +14,10 @@ const searchText = ref('')
 const selectedIngredient = ref('')
 const maximumPreparationTime = ref('')
 const expandedSections = ref({})
+const selectedRecipeId = ref(null)
+const selectedRecipe = computed(() => (
+  recipes.find((recipe) => recipe.recipe_id === selectedRecipeId.value) ?? null
+))
 
 const recipeImages = {
   1: pineappleVodkaImage,
@@ -34,11 +38,18 @@ const recipes = recipeData.recipes.map((recipe) => {
   const creator = recipeData.users.find((user) => user.user_id === recipe.user_id)
   const recipeIngredients = recipeData.recipe_ingredients
     .filter((entry) => entry.recipe_id === recipe.recipe_id)
-    .map((entry) => ingredients.find((ingredient) => ingredient.ingredient_id === entry.ingredient_id))
+    .map((entry) => ({
+      ...ingredients.find((ingredient) => ingredient.ingredient_id === entry.ingredient_id),
+      quantity: entry.quantity,
+      unit_of_measure: entry.unit_of_measure,
+    }))
   const reviews = recipeData.reviews.filter((review) => review.recipe_id === recipe.recipe_id)
   const averageRating = reviews.length
     ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length
     : null
+  const preparationSteps = recipeData.preparation_steps
+    .filter((step) => step.recipe_id === recipe.recipe_id)
+    .sort((first, second) => first.step_number - second.step_number)
 
   return {
     ...recipe,
@@ -47,6 +58,8 @@ const recipes = recipeData.recipes.map((recipe) => {
     image: recipeImages[recipe.recipe_id],
     averageRating,
     reviewCount: reviews.length,
+    preparationSteps,
+    reviews: [],
   }
 })
 
@@ -96,16 +109,25 @@ const recipeSections = computed(() => {
 function toggleSection(sectionId) {
   expandedSections.value[sectionId] = !expandedSections.value[sectionId]
 }
+
+function openRecipe(recipe) {
+  selectedRecipeId.value = recipe.recipe_id
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+function closeRecipe() {
+  selectedRecipeId.value = null
+}
 </script>
 
 <template>
   <main class="recipes-page">
-    <section class="recipes-introduction">
+    <section v-if="!selectedRecipe" class="recipes-introduction">
       <h1>Find your next favorite cocktail</h1>
       <p>Search recipes by name, creator, or ingredients you already have.</p>
     </section>
 
-    <section class="recipe-search" aria-label="Search and filter recipes">
+    <section v-if="!selectedRecipe" class="recipe-search" aria-label="Search and filter recipes">
       <label class="search-field">
         <span>Search recipes</span>
         <input
@@ -140,7 +162,7 @@ function toggleSection(sectionId) {
       </label>
     </section>
 
-    <section class="recipe-results" aria-live="polite">
+    <section v-if="!selectedRecipe" class="recipe-results" aria-live="polite">
       <p class="results-count">
         {{ filteredRecipes.length }}
         {{ filteredRecipes.length === 1 ? 'recipe' : 'recipes' }}
@@ -170,6 +192,12 @@ function toggleSection(sectionId) {
               v-for="recipe in (expandedSections[section.id] ? section.recipes : section.recipes.slice(0, 10))"
               :key="recipe.recipe_id"
               class="recipe-card"
+              role="button"
+              tabindex="0"
+              :aria-label="`View recipe: ${recipe.title}`"
+              @click="openRecipe(recipe)"
+              @keydown.enter="openRecipe(recipe)"
+              @keydown.space.prevent="openRecipe(recipe)"
             >
               <img class="recipe-image" :src="recipe.image" :alt="recipe.title">
               <div class="recipe-card-content">
@@ -203,6 +231,73 @@ function toggleSection(sectionId) {
         No recipes match your search.
       </p>
     </section>
+
+    <article v-else class="recipe-detail">
+      <button class="back-button" type="button" @click="closeRecipe">
+        <span aria-hidden="true">←</span> Back to recipes
+      </button>
+
+      <section class="detail-overview">
+        <img class="detail-image" :src="selectedRecipe.image" :alt="selectedRecipe.title">
+        <div class="detail-summary">
+          <p class="recipe-creator">By {{ selectedRecipe.creator }}</p>
+          <p class="detail-category">{{ selectedRecipe.category }}</p>
+          <h1>{{ selectedRecipe.title }}</h1>
+          <p class="detail-description">{{ selectedRecipe.description }}</p>
+          <p class="detail-meta">
+            {{ Math.ceil(selectedRecipe.preparation_time / 60) }} min
+            <span aria-hidden="true">·</span>
+            {{ selectedRecipe.glass_name }} glass
+            <span aria-hidden="true">·</span>
+            {{ selectedRecipe.capacity_cl }} cl
+          </p>
+          <div class="detail-ingredients">
+            <h2>Ingredients</h2>
+            <ul class="ingredient-list" aria-label="Ingredients">
+              <li v-for="ingredient in selectedRecipe.ingredients" :key="ingredient.ingredient_id">
+                {{ ingredient.ingredient_name }}
+                — {{ ingredient.quantity }} {{ ingredient.unit_of_measure }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="detail-section" aria-labelledby="preparation-heading">
+        <h2 id="preparation-heading">Preparation</h2>
+        <ol v-if="selectedRecipe.preparationSteps.length" class="preparation-list">
+          <li v-for="step in selectedRecipe.preparationSteps" :key="step.step_id">
+            <span class="step-number">{{ step.step_number }}</span>
+            <p>{{ step.instruction }}</p>
+          </li>
+        </ol>
+        <p v-else class="empty-detail">
+          Preparation steps will be available when this recipe is completed.
+        </p>
+      </section>
+
+      <section class="detail-section" aria-labelledby="reviews-heading">
+        <div class="reviews-heading">
+          <h2 id="reviews-heading">Reviews and ratings</h2>
+          <span>{{ selectedRecipe.reviews.length }}</span>
+        </div>
+        <ul v-if="selectedRecipe.reviews.length" class="review-list">
+          <li v-for="review in selectedRecipe.reviews" :key="review.review_id" class="review-card">
+            <div class="review-card-heading">
+              <h3>{{ review.reviewer }}</h3>
+              <span class="review-rating" :aria-label="`${review.rating} out of 5 stars`">
+                <span aria-hidden="true">{{ '★'.repeat(review.rating) }}{{ '☆'.repeat(5 - review.rating) }}</span>
+                {{ review.rating }}/5
+              </span>
+            </div>
+            <p>{{ review.comment || 'No comment provided.' }}</p>
+          </li>
+        </ul>
+        <p v-else class="empty-detail">
+          No reviews yet. Reviews will be available once the backend is connected.
+        </p>
+      </section>
+    </article>
   </main>
 </template>
 
@@ -315,9 +410,19 @@ function toggleSection(sectionId) {
 .recipe-card {
   flex: 0 0 320px;
   overflow: hidden;
+  cursor: pointer;
   border-radius: 10px;
   background-color: var(--surface);
   box-shadow: var(--header-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recipe-card:hover,
+.recipe-card:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 22px rgb(0 0 0 / 16%);
+  outline: 2px solid var(--button);
+  outline-offset: 2px;
 }
 
 .recipe-image {
@@ -389,4 +494,179 @@ function toggleSection(sectionId) {
   background-color: var(--surface);
   text-align: center;
 }
+
+.recipe-detail {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.back-button {
+  margin: 0 0 24px;
+  padding: 10px 0;
+  border: 0;
+  background: transparent;
+  color: var(--button);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.back-button:hover {
+  color: var(--button-hover);
+}
+
+.detail-overview,
+.detail-section {
+  overflow: hidden;
+  border-radius: 10px;
+  background-color: var(--surface);
+  box-shadow: var(--header-shadow);
+}
+
+.detail-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  margin-bottom: 24px;
+}
+
+.detail-image {
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  object-fit: cover;
+}
+
+.detail-summary {
+  padding: clamp(24px, 5vw, 40px);
+}
+
+.detail-summary h1 {
+  margin: 10px 0 16px;
+  font-family: "Press Start 2P", "Terminal", "Courier New", monospace;
+  font-size: clamp(22px, 3vw, 32px);
+  line-height: 1.5;
+  text-shadow: 2px 2px 0 var(--button);
+}
+
+.detail-category {
+  margin: 0;
+  color: var(--button);
+  font-weight: 700;
+}
+
+.detail-description,
+.detail-meta {
+  color: var(--nav-text);
+  line-height: 1.6;
+}
+
+.detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.detail-ingredients {
+  margin-top: 28px;
+}
+
+.detail-ingredients h2,
+.detail-section h2 {
+  margin: 0 0 18px;
+  font-size: 22px;
+}
+
+.detail-ingredients .ingredient-list {
+  gap: 10px;
+}
+
+.detail-section {
+  margin-bottom: 24px;
+  padding: clamp(24px, 5vw, 36px);
+}
+
+.preparation-list,
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.preparation-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.step-number {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border-radius: 50%;
+  background-color: var(--button);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.preparation-list p,
+.review-card p {
+  margin: 4px 0 0;
+  color: var(--nav-text);
+  line-height: 1.6;
+}
+
+.reviews-heading,
+.review-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.reviews-heading > span {
+  display: grid;
+  min-width: 32px;
+  height: 32px;
+  place-items: center;
+  border-radius: 16px;
+  background-color: var(--page-bg);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.review-card {
+  padding: 18px;
+  border-radius: 8px;
+  background-color: var(--page-bg);
+}
+
+.review-card h3 {
+  margin: 0;
+}
+
+.review-rating {
+  color: var(--nav-text);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.review-rating span {
+  color: var(--button);
+}
+
+.empty-detail {
+  margin: 0;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: var(--page-bg);
+  color: var(--nav-text);
+  line-height: 1.6;
+}
+
 </style>

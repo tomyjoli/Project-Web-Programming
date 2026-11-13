@@ -1,11 +1,13 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 import logoUrl from '../assets/bananasplit_logo.jpg'
 import logoHover from '../assets/bananasplit_logo_animated.gif'
+import { currentUser, getUserInitials } from '../auth.js'
 
 const isDark = ref(false)
 const isLogoHovered = ref(false)
+const userInitials = computed(() => getUserInitials(currentUser.value?.username ?? ''))
 
 function toggleTheme() {
   isDark.value = !isDark.value
@@ -53,7 +55,16 @@ function toggleTheme() {
               <path d="M20.2 15.5A8.5 8.5 0 0 1 8.5 3.8 8.5 8.5 0 1 0 20.2 15.5Z"></path>
             </svg>
           </button>
-          <RouterLink class="signup-button" to="/sign-up">Sign up</RouterLink>
+          <RouterLink
+            v-if="currentUser"
+            class="signup-button"
+            to="/users"
+            :aria-label="`Account: ${currentUser.username}`"
+            :title="currentUser.username"
+          >
+            {{ userInitials }}
+          </RouterLink>
+          <RouterLink v-else class="signup-button" to="/sign-up">Sign up</RouterLink>
         </div>
       </div>
     </header>
