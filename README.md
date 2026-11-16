@@ -111,7 +111,17 @@ The frontend uses `http://localhost:9000` by default. To use a different backend
 
 The Share page requires a signed-in session. Recipe creation writes the recipe and all its ingredient/step rows in one database transaction. The recipe owner is taken from the session cookie; any user ID submitted by the browser is ignored.
 
-The Albums page's “My published recipes” section lists and edits recipes owned by the signed-in user. Deleting a recipe also deletes its reviews through the database foreign-key cascade. Fridge persistence and assigning recipes to albums are not yet connected to the API.
+The Albums page saves each user's fridges to MySQL and lets them add their own recipes to multiple fridges, or remove a recipe from a fridge without deleting it. Album ownership and recipe ownership are checked by the API.
+
+| Method | Endpoint | Response |
+| :--- | :--- | :--- |
+| `GET` | `/albumsapi` | Lists the signed-in user's albums and their recipes. |
+| `POST` | `/albumsapi` | Creates a fridge with a name and color. |
+| `DELETE` | `/albumsapi/:albumId` | Deletes a fridge owned by the signed-in user. |
+| `POST` | `/albumsapi/:albumId/recipes` | Adds one of the user's recipes to that fridge. |
+| `DELETE` | `/albumsapi/:albumId/recipes/:recipeId` | Removes the recipe from that fridge without deleting the recipe. |
+
+Deleting a recipe itself still removes its review and album links through the database foreign-key cascades.
 
 ### Authentication API
 

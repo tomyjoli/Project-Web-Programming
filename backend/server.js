@@ -6,6 +6,7 @@ const cors = require('cors');
 const session = require('express-session');
 const db = require('./utils/db.include');
 const authApiRoute = require('./controllers/authapi.route');
+const albumsApiRoute = require('./controllers/albumsapi.route');
 const recipesApiRoute = require('./controllers/recipesapi.route');
 
 const app = express();
@@ -46,6 +47,7 @@ app.get('/api/v1/health', async (_req, res) => {
 
 app.use('/recipesapi', recipesApiRoute);
 app.use('/authapi', authApiRoute);
+app.use('/albumsapi', albumsApiRoute);
 
 if (require.main === module) {
     app.listen(port, () => {

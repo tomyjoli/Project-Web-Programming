@@ -7,9 +7,15 @@ import { authError, authInitialized, currentUser, initializeAuth } from '../auth
 const albums = ref([])
 const albumName = ref('')
 const albumColor = ref('#f4a261')
+const recipeToAdd = ref('')
 const selectedAlbumId = ref(null)
 const selectedAlbum = computed(() => (
-  albums.value.find((album) => album.id === selectedAlbumId.value) ?? null
+  albums.value.find((album) => album.album_id === selectedAlbumId.value) ?? null
+))
+const availableRecipes = computed(() => (
+  myRecipes.value.filter((recipe) => (
+    !selectedAlbum.value?.recipes.some((item) => item.recipe_id === recipe.recipe_id)
+  ))
 ))
 const myRecipes = ref([])
 const ingredients = ref([])
@@ -19,7 +25,6 @@ const recipeError = ref('')
 const recipeMessage = ref('')
 const editingRecipeId = ref(null)
 const recipeForm = ref(emptyRecipeForm())
-let nextAlbumId = 1
 let nextEditorRowId = 1
 
 function emptyRecipeForm() {
@@ -38,19 +43,21 @@ function emptyRecipeForm() {
 
 onMounted(async () => {
   await initializeAuth()
-  if (currentUser.value) await loadMyRecipes()
+  if (currentUser.value) await loadUserData()
 })
 
-async function loadMyRecipes() {
+async function loadUserData() {
   loadingRecipes.value = true
   recipeError.value = ''
   try {
-    const [recipes, availableIngredients] = await Promise.all([
+    const [recipes, availableIngredients, userAlbums] = await Promise.all([
       apiGet('/recipesapi/recipes/mine'),
       apiGet('/recipesapi/ingredients'),
+      apiGet('/albumsapi'),
     ])
     myRecipes.value = recipes
     ingredients.value = availableIngredients
+    albums.value = userAlbums
   } catch (error) {
     recipeError.value = error.message
   } finally {
@@ -143,6 +150,11 @@ async function saveRecipe() {
     myRecipes.value = myRecipes.value.map((recipe) => (
       recipe.recipe_id === updatedRecipe.recipe_id ? updatedRecipe : recipe
     ))
+    albums.value.forEach((album) => {
+      album.recipes = album.recipes.map((recipe) => (
+        recipe.recipe_id === updatedRecipe.recipe_id ? updatedRecipe : recipe
+      ))
+    })
     editingRecipeId.value = null
     recipeForm.value = emptyRecipeForm()
     recipeMessage.value = 'Your recipe has been updated.'
@@ -164,6 +176,9 @@ async function deleteRecipe(recipe) {
   try {
     await apiRequest(`/recipesapi/recipes/${recipe.recipe_id}`, { method: 'DELETE' })
     myRecipes.value = myRecipes.value.filter((item) => item.recipe_id !== recipe.recipe_id)
+    albums.value.forEach((album) => {
+      album.recipes = album.recipes.filter((item) => item.recipe_id !== recipe.recipe_id)
+    })
     if (editingRecipeId.value === recipe.recipe_id) cancelEditing()
     recipeMessage.value = `"${recipe.title}" has been deleted.`
   } catch (error) {
@@ -171,32 +186,82 @@ async function deleteRecipe(recipe) {
   }
 }
 
-function createAlbum() {
+async function createAlbum() {
   const name = albumName.value.trim()
   if (!name) return
 
-  const album = {
-    id: nextAlbumId++,
-    name,
-    color: albumColor.value,
+  recipeError.value = ''
+  recipeMessage.value = ''
+  try {
+    const album = await apiRequest('/albumsapi', {
+      method: 'POST',
+      body: { name, color: albumColor.value },
+    })
+    albums.value.unshift(album)
+    selectedAlbumId.value = album.album_id
+    albumName.value = ''
+  } catch (error) {
+    recipeError.value = error.message
   }
-
-  albums.value.push(album)
-  selectedAlbumId.value = album.id
-  albumName.value = ''
 }
 
-function removeAlbum() {
+async function removeAlbum() {
   if (!selectedAlbumId.value) return
-  const index = albums.value.findIndex((album) => album.id === selectedAlbumId.value)
-  if (index !== -1) {
-    albums.value.splice(index, 1)
+  const album = selectedAlbum.value
+  if (!window.confirm(`Delete "${album.name}"? Its recipes will remain in your account.`)) return
+
+  recipeError.value = ''
+  recipeMessage.value = ''
+  try {
+    await apiRequest(`/albumsapi/${album.album_id}`, { method: 'DELETE' })
+    albums.value = albums.value.filter((item) => item.album_id !== album.album_id)
     selectedAlbumId.value = null
+    recipeMessage.value = `"${album.name}" has been deleted.`
+  } catch (error) {
+    recipeError.value = error.message
   }
 }
 
 function openAlbum(album) {
-  selectedAlbumId.value = selectedAlbumId.value === album.id ? null : album.id
+  selectedAlbumId.value = selectedAlbumId.value === album.album_id ? null : album.album_id
+  recipeToAdd.value = ''
+}
+
+async function addRecipeToAlbum() {
+  if (!selectedAlbum.value || !recipeToAdd.value) return
+  const recipeId = Number(recipeToAdd.value)
+  recipeError.value = ''
+  recipeMessage.value = ''
+  try {
+    await apiRequest(`/albumsapi/${selectedAlbum.value.album_id}/recipes`, {
+      method: 'POST',
+      body: { recipe_id: recipeId },
+    })
+    const recipe = myRecipes.value.find((item) => item.recipe_id === recipeId)
+    if (recipe) selectedAlbum.value.recipes.push(recipe)
+    recipeToAdd.value = ''
+    recipeMessage.value = 'Recipe added to this fridge.'
+  } catch (error) {
+    recipeError.value = error.message
+  }
+}
+
+async function removeRecipeFromAlbum(recipe) {
+  if (!selectedAlbum.value) return
+  recipeError.value = ''
+  recipeMessage.value = ''
+  try {
+    await apiRequest(
+      `/albumsapi/${selectedAlbum.value.album_id}/recipes/${recipe.recipe_id}`,
+      { method: 'DELETE' },
+    )
+    selectedAlbum.value.recipes = selectedAlbum.value.recipes.filter(
+      (item) => item.recipe_id !== recipe.recipe_id,
+    )
+    recipeMessage.value = `"${recipe.title}" was removed from this fridge.`
+  } catch (error) {
+    recipeError.value = error.message
+  }
 }
 
 </script>
@@ -215,6 +280,18 @@ function openAlbum(album) {
         </div>
         <span class="album-count">{{ albums.length }} {{ albums.length === 1 ? 'fridge' : 'fridges' }}</span>
       </div>
+
+      <p v-if="!authInitialized" class="recipe-notice" role="status">Checking your sign-in session…</p>
+      <section v-else-if="!currentUser" class="empty-fridges">
+        <h3>Sign in to manage your fridges</h3>
+        <RouterLink class="share-link" to="/users">Sign in</RouterLink>
+        <p v-if="authError" class="recipe-error" role="alert">{{ authError }}</p>
+      </section>
+
+      <template v-else>
+      <p v-if="recipeError" class="recipe-notice recipe-error" role="alert">{{ recipeError }}</p>
+      <p v-if="recipeMessage" class="recipe-notice recipe-success" role="status">{{ recipeMessage }}</p>
+      <p v-if="loadingRecipes" class="recipe-notice" role="status">Loading your fridges…</p>
 
       <form class="create-album-form" @submit.prevent="createAlbum">
         <label class="album-name-field">
@@ -239,12 +316,12 @@ function openAlbum(album) {
       <div v-if="albums.length" class="fridge-grid">
         <button
           v-for="album in albums"
-          :key="album.id"
+          :key="album.album_id"
           class="fridge-card"
-          :class="{ 'fridge-card-selected': selectedAlbumId === album.id }"
+          :class="{ 'fridge-card-selected': selectedAlbumId === album.album_id }"
           :style="{ '--fridge-color': album.color }"
           type="button"
-          :aria-pressed="selectedAlbumId === album.id"
+          :aria-pressed="selectedAlbumId === album.album_id"
           @click="openAlbum(album)"
         >
           <span class="fridge-top">
@@ -271,11 +348,52 @@ function openAlbum(album) {
           <span class="selected-album-swatch" :style="{ backgroundColor: selectedAlbum.color }"></span>
           <h3>{{ selectedAlbum.name }}</h3>
         </div>
-        <p>Recipes you add to this fridge will be waiting here.</p>
+        <form class="add-to-album-form" @submit.prevent="addRecipeToAlbum">
+          <label class="album-name-field">
+            <span>Add one of your recipes</span>
+            <select v-model="recipeToAdd" :disabled="!availableRecipes.length" required>
+              <option value="" disabled>
+                {{ availableRecipes.length ? 'Select a published recipe' : 'All your recipes are already here' }}
+              </option>
+              <option
+                v-for="recipe in availableRecipes"
+                :key="recipe.recipe_id"
+                :value="recipe.recipe_id"
+              >
+                {{ recipe.title }}
+              </option>
+            </select>
+          </label>
+          <button
+            class="create-album-button"
+            type="submit"
+            :disabled="!recipeToAdd || !availableRecipes.length"
+          >
+            Add recipe
+          </button>
+        </form>
+
+        <div v-if="selectedAlbum.recipes.length" class="album-recipe-list">
+          <article
+            v-for="recipe in selectedAlbum.recipes"
+            :key="recipe.recipe_id"
+            class="album-recipe-item"
+          >
+            <div>
+              <h4>{{ recipe.title }}</h4>
+              <p>{{ recipe.category }} · {{ recipe.glass_name }} · {{ recipe.capacity_cl }} cl</p>
+            </div>
+            <button type="button" class="remove-from-album-button" @click="removeRecipeFromAlbum(recipe)">
+              Remove
+            </button>
+          </article>
+        </div>
+        <p v-else class="album-empty-content">This fridge is empty. Add one of your published recipes above.</p>
         <button class="remove-button" type="button" @click="removeAlbum">
           Remove this fridge
         </button>
       </article>
+      </template>
     </section>
 
     <section class="recipes-section" aria-labelledby="my-recipes-heading">
@@ -295,8 +413,6 @@ function openAlbum(album) {
       </section>
 
       <template v-else>
-        <p v-if="recipeError" class="recipe-notice recipe-error" role="alert">{{ recipeError }}</p>
-        <p v-if="recipeMessage" class="recipe-notice recipe-success" role="status">{{ recipeMessage }}</p>
         <p v-if="loadingRecipes" class="recipe-notice" role="status">Loading your recipes…</p>
 
         <form v-if="editingRecipeId" class="recipe-editor" @submit.prevent="saveRecipe">
@@ -532,7 +648,8 @@ function openAlbum(album) {
   flex: 1;
 }
 
-.album-name-field input {
+.album-name-field input,
+.album-name-field select {
   box-sizing: border-box;
   width: 100%;
   min-height: 44px;
@@ -593,6 +710,11 @@ function openAlbum(album) {
   border-color: var(--button-hover);
   background-color: var(--button-hover);
   color: var(--text);
+}
+
+.create-album-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .fridge-grid {
