@@ -24,13 +24,15 @@ Have you ever wanted to make a cocktail at home using the ingredients you alread
 
 ## 🗄️ Database Architecture (ER & MLD)
 
-The database is normalized and structured around **6 core entities**. The full Entity-Relationship and Logical Data Model diagrams are available in [`MLD + ER diagram LECLANCHE Antonin & GARRIDO Tom.pdf`](./MLD%20+%20ER%20diagram%20LECLANCHE%20Antonin%20&%20GARRIDO%20Tom.pdf).
+The database is normalized and structured around **8 core entities**. The full Entity-Relationship and Logical Data Model diagrams are available in [`MLD + ER diagram LECLANCHE Antonin & GARRIDO Tom.pdf`](./MLD%20+%20ER%20diagram%20LECLANCHE%20Antonin%20&%20GARRIDO%20Tom.pdf).
 
 | Table Name | Primary Key (`PK`) | Foreign Keys (`FK`) | Description & Key Attributes |
 | :--- | :--- | :--- | :--- |
 | **`USER`** | `user_id` | — | Registered members (`username`, `email`, `password`, `bio`, `date_of_birth`, `profile_picture_url`, `created_at`). |
 | **`INGREDIENT`** | `ingredient_id` | — | Bar & kitchen items (`ingredient_name`, `alcohol_degree`, `allergens`, `average_price`, `category_name`, `is_legal`). |
 | **`RECIPE`** | `recipe_id` | `user_id` | Recipe details (`title`, `category`, `description`, `photo_url`, `created_at`, `glass_name`, `capacity_cl`). |
+| **`ALBUM`** | `album_id` | `user_id` | A named, colored album/fridge owned by a user. |
+| **`ALBUM_RECIPE`** | `album_id`, `recipe_id` | `album_id`, `recipe_id` | Associates a user's recipes with one or more of their albums. |
 | **`RECIPE_INGREDIENT`** | `recipe_id`, `ingredient_id` | `recipe_id`, `ingredient_id` | Associative table linking recipes and ingredients with exact `quantity` and `unit_of_measure`. |
 | **`PREPARATION_STEP`** | `step_id` | `recipe_id` | Ordered instructions for a cocktail (`step_number`, `instruction`). |
 | **`REVIEW`** | `review_id` | `user_id`, `recipe_id` | User feedback on cocktails (`rating`, `comment`, `created_at`, `Upvote`, `Downvote`). |
@@ -58,28 +60,48 @@ Project-Web-Programming/
 │       ├── share.vue
 │       ├── users.vue
 │       └── album.vue
-├── backend/                 # En attente de l'implémentation du serveur
+├── backend/                 # Express API
 ├── database/
 │   └── bananasplit.sql
 ├── .gitignore
 └── README.md
 ```
 
-## 🚀 Lancer le frontend
+## Run the application locally
 
-Dans un terminal, place-toi dans le dossier `frontend/` :
+### Prerequisites
 
-```bash
-cd frontend
+- Node.js and npm
+- MySQL Server
+- A MySQL database initialized with `database/bananasplit.sql`
+
+> **Warning:** `database/bananasplit.sql` drops and recreates its tables. Import it only into a new or disposable database; back up any data you need to keep.
+
+### Configure and start the backend
+
+1. Start MySQL and import `database/bananasplit.sql` using MySQL Workbench or the MySQL command line.
+2. Open `backend/.env` and replace `CHANGE_ME` in `DB_PASSWORD` with your MySQL password. Set `DB_USER` to your MySQL username if it is not `root`. Do not commit this file; it is ignored by Git.
+3. In a PowerShell terminal, install the backend dependencies (first run only) and start the API:
+
+```powershell
+cd "C:\path\to\Project-Web-Programming\backend"
+npm install
+npm start
+```
+
+The API listens on `http://localhost:9000`. Check `http://localhost:9000/api/v1/health`; a successful response is `{"status":"ok","database":"connected"}`. An HTTP 503 means the API started but could not connect to MySQL; check that MySQL is running and that `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` in `backend/.env` are correct.
+
+### Start the frontend
+
+Keep the backend terminal running. Open a second PowerShell terminal and run:
+
+```powershell
+cd "C:\path\to\Project-Web-Programming\frontend"
 npm install
 npm run dev
 ```
 
-Vite affiche l'adresse locale à ouvrir dans le navigateur. Les autres commandes disponibles dans `frontend/` sont `npm run build` et `npm run preview`.
-
-Le dossier `backend/` ne contient pas encore de serveur : à ce stade, seule l'application frontend peut être lancée. La base SQL est fournie séparément dans `database/bananasplit.sql`.
-
-Les dossiers `frontend/node_modules/` et `frontend/dist/` sont générés et ignorés par Git : le premier contient les dépendances du frontend, le second le résultat de compilation. Ils sont les seuls nécessaires au fonctionnement actuel du projet.
+Open the local URL printed by Vite (usually `http://localhost:5173`). The frontend and backend must both be running for API-backed pages to work. To create a production frontend build, run `npm run build` from `frontend/`.
 
 ---
 ## 📅 Project Roadmap & Deliverables Summary

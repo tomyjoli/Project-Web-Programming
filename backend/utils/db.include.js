@@ -1,12 +1,14 @@
-const mysql = require('mysql2');
-const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'bananasplit'
+const mysql = require('mysql2/promise');
+
+const pool = mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'bananasplit',
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
-db.connect(err => {
-  if (err) throw err;
-  console.log('Connecté à la BDD bananasplit');
-});
-module.exports = db;
+
+module.exports = pool;
