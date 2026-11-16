@@ -17,6 +17,9 @@ function validateRecipe(body) {
   if (typeof recipe.title === 'string' && recipe.title.trim().length > 100) {
     errors.push('title must be 100 characters or fewer.');
   }
+  if (typeof recipe.description === 'string' && recipe.description.length > 65535) {
+    errors.push('description must be 65,535 characters or fewer.');
+  }
   if (typeof recipe.category === 'string' && recipe.category.trim().length > 100) {
     errors.push('category must be 100 characters or fewer.');
   }
@@ -32,18 +35,29 @@ function validateRecipe(body) {
   if (recipe.photo_url && recipe.photo_url.length > 255) {
     errors.push('photo_url must be 255 characters or fewer.');
   }
+  if (recipe.photo_url) {
+    try {
+      const photoUrl = new URL(recipe.photo_url);
+      if (!['http:', 'https:'].includes(photoUrl.protocol)) {
+        errors.push('photo_url must use HTTP or HTTPS.');
+      }
+    } catch {
+      errors.push('photo_url must be a valid HTTP or HTTPS URL.');
+    }
+  }
   if (recipe.preparation_time != null
-      && (!Number.isInteger(Number(recipe.preparation_time)) || Number(recipe.preparation_time) < 1)) {
+      && (!Number.isInteger(Number(recipe.preparation_time))
+        || Number(recipe.preparation_time) < 1
+        || Number(recipe.preparation_time) > 2147483647)) {
     errors.push('preparation_time must be a positive number of seconds.');
   }
-  if (!positiveInteger(recipe.capacity_cl)) {
+  if (!positiveInteger(recipe.capacity_cl) || Number(recipe.capacity_cl) > 2147483647) {
     errors.push('capacity_cl must be a positive integer.');
-  }
-  if (recipe.status != null && !['draft', 'published'].includes(recipe.status)) {
-    errors.push('status must be draft or published.');
   }
   if (!Array.isArray(recipe.recipe_ingredients) || recipe.recipe_ingredients.length === 0) {
     errors.push('At least one ingredient is required.');
+  } else if (recipe.recipe_ingredients.length > 50) {
+    errors.push('A recipe cannot have more than 50 ingredients.');
   } else {
     const ingredientIds = new Set();
     for (const ingredient of recipe.recipe_ingredients) {
@@ -55,7 +69,8 @@ function validateRecipe(body) {
       ingredientIds.add(ingredientId);
       if (!Number.isFinite(Number(ingredient.quantity))
           || Number(ingredient.quantity) <= 0
-          || Number(ingredient.quantity) > 999.99) {
+          || Number(ingredient.quantity) > 999.99
+          || Math.round(Number(ingredient.quantity) * 100) !== Number(ingredient.quantity) * 100) {
         errors.push('Ingredient quantities must be between 0 and 999.99.');
         break;
       }
@@ -68,8 +83,11 @@ function validateRecipe(body) {
     }
   }
   if (!Array.isArray(recipe.preparation_steps) || recipe.preparation_steps.length === 0
+      || recipe.preparation_steps.length > 50
       || recipe.preparation_steps.some((step) => (
-        typeof step?.instruction !== 'string' || !step.instruction.trim()
+        typeof step?.instruction !== 'string'
+        || !step.instruction.trim()
+        || step.instruction.trim().length > 2000
       ))) {
     errors.push('At least one non-empty preparation step is required.');
   }

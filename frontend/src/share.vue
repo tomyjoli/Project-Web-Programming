@@ -1,25 +1,34 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
-import recipeData from '../data/bananasplit.json'
+import { computed, onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
+import { apiGet, apiRequest } from './api.js'
+import { authError, authInitialized, currentUser, initializeAuth } from '../auth.js'
 
 let nextRowId = 1
 
-const form = ref({
-  title: '',
-  category: '',
-  description: '',
-  photo_url: '',
-  preparation_time: '',
-  glass_name: '',
-  capacity_cl: '',
-})
+function emptyForm() {
+  return {
+    title: '',
+    category: '',
+    description: '',
+    photo_url: '',
+    preparation_time: '',
+    glass_name: '',
+    capacity_cl: '',
+  }
+}
+
+const form = ref(emptyForm())
+const recipeIngredients = ref([])
 const ingredients = ref([createIngredient()])
 const steps = ref([createStep()])
-const recipePayload = ref(null)
-const recipeAction = ref('')
+const loadingIngredients = ref(false)
+const isSubmitting = ref(false)
+const errorMessage = ref('')
+const successMessage = ref('')
 const previewIngredients = computed(() => ingredients.value
   .filter((ingredient) => ingredient.ingredient_id)
-  .map((ingredient) => recipeData.ingredients.find(
+  .map((ingredient) => recipeIngredients.value.find(
     (item) => item.ingredient_id === Number(ingredient.ingredient_id),
   ))
   .filter(Boolean))
@@ -34,6 +43,20 @@ function createIngredient() {
 function createStep() {
   return { id: nextRowId++, instruction: '' }
 }
+
+onMounted(async () => {
+  await initializeAuth()
+  if (!currentUser.value) return
+
+  loadingIngredients.value = true
+  try {
+    recipeIngredients.value = await apiGet('/recipesapi/ingredients')
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    loadingIngredients.value = false
+  }
+})
 
 function addIngredient() {
   ingredients.value.push(createIngredient())
@@ -51,46 +74,79 @@ function removeStep(index) {
   steps.value.splice(index, 1)
 }
 
-function prepareRecipe(action = 'shared') {
-  recipeAction.value = action
-  recipePayload.value = {
-    recipe: {
-      title: form.value.title,
-      category: form.value.category,
-      description: form.value.description || null,
-      photo_url: form.value.photo_url || null,
-      preparation_time: form.value.preparation_time
-        ? Number(form.value.preparation_time)
-        : null,
-      glass_name: form.value.glass_name,
-      capacity_cl: form.value.capacity_cl ? Number(form.value.capacity_cl) : null,
-    },
-    recipe_ingredients: ingredients.value.map((ingredient) => ({
-      ingredient_id: ingredient.ingredient_id ? Number(ingredient.ingredient_id) : null,
-      quantity: ingredient.quantity ? Number(ingredient.quantity) : null,
-      unit_of_measure: ingredient.unit_of_measure,
-    })),
-    preparation_steps: steps.value.map((step, index) => ({
-      step_number: index + 1,
-      instruction: step.instruction,
-    })),
+async function submitRecipe() {
+  errorMessage.value = ''
+  successMessage.value = ''
+  isSubmitting.value = true
+
+  try {
+    const result = await apiRequest('/recipesapi/recipes', {
+      method: 'POST',
+      body: {
+        recipe: {
+          title: form.value.title,
+          category: form.value.category,
+          description: form.value.description || null,
+          photo_url: form.value.photo_url || null,
+          preparation_time: form.value.preparation_time
+            ? Number(form.value.preparation_time)
+            : null,
+          glass_name: form.value.glass_name,
+          capacity_cl: Number(form.value.capacity_cl),
+        },
+        recipe_ingredients: ingredients.value.map((ingredient) => ({
+          ingredient_id: Number(ingredient.ingredient_id),
+          quantity: Number(ingredient.quantity),
+          unit_of_measure: ingredient.unit_of_measure,
+        })),
+        preparation_steps: steps.value.map((step) => ({
+          instruction: step.instruction,
+        })),
+      },
+    })
+
+    successMessage.value = `"${result.title}" has been published and is now visible in Recipes.`
+    form.value = emptyForm()
+    ingredients.value = [createIngredient()]
+    steps.value = [createStep()]
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    isSubmitting.value = false
   }
 }
-
-watch([form, ingredients, steps], () => {
-  recipePayload.value = null
-  recipeAction.value = ''
-}, { deep: true })
 </script>
 
 <template>
   <main class="share-page">
     <section class="share-introduction">
       <h1>Share your recipe</h1>
-      <p>Have a cocktail worth sharing? Add its details below.</p>
+      <p>Have a cocktail worth sharing? Add its details below to publish it for the community.</p>
     </section>
 
-    <form class="share-form" @submit.prevent="prepareRecipe">
+    <section v-if="authInitialized && !currentUser" class="notice-section" role="status">
+      <h2>Sign in to share a recipe</h2>
+      <p>Your published recipes will be linked to your account.</p>
+      <div class="form-actions">
+        <RouterLink class="share-button" to="/users">Sign in</RouterLink>
+        <RouterLink class="secondary-button" to="/sign-up">Create account</RouterLink>
+      </div>
+      <p v-if="authError" class="form-message form-error" role="alert">{{ authError }}</p>
+    </section>
+
+    <section v-else-if="!authInitialized" class="notice-section" role="status">
+      Checking your sign-in session…
+    </section>
+
+    <template v-else>
+    <p v-if="errorMessage" class="form-message form-error" role="alert">{{ errorMessage }}</p>
+    <section v-if="successMessage" class="form-message form-success" role="status">
+      <p>{{ successMessage }}</p>
+      <RouterLink to="/recipes">Browse recipes</RouterLink>
+    </section>
+    <p v-if="loadingIngredients" class="form-message" role="status">Loading ingredients…</p>
+
+    <form class="share-form" @submit.prevent="submitRecipe">
       <section class="form-section recipe-details-section">
         <h2>Recipe details</h2>
 
@@ -181,7 +237,7 @@ watch([form, ingredients, steps], () => {
             <select v-model="ingredient.ingredient_id" required>
               <option value="" disabled>Select an ingredient</option>
               <option
-                v-for="item in recipeData.ingredients"
+                v-for="item in recipeIngredients"
                 :key="item.ingredient_id"
                 :value="item.ingredient_id"
                 :disabled="ingredients.some((row, rowIndex) => rowIndex !== index && row.ingredient_id === item.ingredient_id)"
@@ -227,19 +283,12 @@ watch([form, ingredients, steps], () => {
       </section>
 
       <div class="form-actions">
-        <button class="draft-button" type="button" @click="prepareRecipe('draft')">Save as draft</button>
-        <button class="share-button" type="submit">Share recipe</button>
+        <button class="share-button" type="submit" :disabled="isSubmitting || loadingIngredients || !recipeIngredients.length">
+          {{ isSubmitting ? 'Publishing…' : 'Publish recipe' }}
+        </button>
       </div>
     </form>
-
-    <section v-if="recipePayload" class="payload-section" aria-live="polite">
-      <h2>{{ recipeAction === 'draft' ? 'Draft preview' : 'Recipe data' }}</h2>
-      <p v-if="recipeAction === 'draft'">
-        This draft is only a preview for now; it is not saved and will be lost when you leave this page.
-      </p>
-      <p v-else>The authenticated user ID will be added when the database API is connected.</p>
-      <pre>{{ JSON.stringify(recipePayload, null, 2) }}</pre>
-    </section>
+    </template>
   </main>
 </template>
 
@@ -276,7 +325,7 @@ watch([form, ingredients, steps], () => {
 }
 
 .share-introduction p,
-.payload-section p {
+.notice-section p {
   margin: 0;
   color: var(--nav-text);
 }
@@ -298,7 +347,7 @@ watch([form, ingredients, steps], () => {
 }
 
 .form-section,
-.payload-section {
+.notice-section {
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -309,7 +358,7 @@ watch([form, ingredients, steps], () => {
 }
 
 .form-section h2,
-.payload-section h2 {
+.notice-section h2 {
   margin: 0;
   color: var(--button);
   font-size: 22px;
@@ -465,6 +514,54 @@ watch([form, ingredients, steps], () => {
   color: #ffffff;
 }
 
+.share-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.notice-section {
+  margin: 0 auto;
+  max-width: 520px;
+}
+
+.notice-section .secondary-button,
+.notice-section .share-button {
+  margin-top: 0;
+  text-decoration: none;
+}
+
+.notice-section h2 {
+  margin: 0;
+  color: var(--button);
+}
+
+.form-message {
+  margin: 0 0 18px;
+  padding: 14px 18px;
+  border-radius: 6px;
+  background-color: var(--surface);
+  color: var(--nav-text);
+}
+
+.form-error {
+  border: 1px solid #b42318;
+  color: #b42318;
+}
+
+.form-success {
+  border: 1px solid #16803c;
+  color: #16803c;
+}
+
+.form-success p {
+  margin: 0 0 8px;
+}
+
+.form-success a {
+  color: inherit;
+  font-weight: 700;
+}
+
 .form-actions {
   display: flex;
   flex-wrap: wrap;
@@ -495,18 +592,6 @@ watch([form, ingredients, steps], () => {
 .remove-button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
-}
-
-.payload-section {
-  margin-top: 24px;
-}
-
-.payload-section pre {
-  overflow-x: auto;
-  margin: 0;
-  padding: 16px;
-  border-radius: 6px;
-  background-color: var(--page-bg);
 }
 
 @media (max-width: 640px) {
