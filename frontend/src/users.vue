@@ -1,11 +1,21 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import { currentUser, clearCurrentUser, createFrontendAccount, getUserInitials } from '../auth.js'
+import {
+  authError,
+  authInitialized,
+  currentUser,
+  getUserInitials,
+  registerAccount,
+  signIn as authenticate,
+  signOut as endSession,
+} from '../auth.js'
 
 const route = useRoute()
 const isRegistering = computed(() => route.path === '/sign-up')
 const message = ref('')
+const isError = ref(false)
+const isSubmitting = ref(false)
 const loginForm = ref({ email: '', password: '' })
 const registrationForm = ref({
   username: '',
@@ -19,26 +29,51 @@ const initials = computed(() => getUserInitials(currentUser.value?.username ?? '
 
 watch(() => route.path, () => {
   message.value = ''
+  isError.value = false
 })
 
-function signIn() {
-  message.value = 'Sign-in will be available once the backend is connected.'
+async function signIn() {
+  await submit(async () => {
+    await authenticate(loginForm.value)
+    loginForm.value.password = ''
+    message.value = 'You are signed in.'
+  })
 }
 
-function register() {
-  createFrontendAccount({
+async function register() {
+  await submit(() => registerAccount({
     username: registrationForm.value.username,
     email: registrationForm.value.email,
+    password: registrationForm.value.password,
     bio: registrationForm.value.bio,
     date_of_birth: registrationForm.value.date_of_birth,
     profile_picture_url: registrationForm.value.profile_picture_url,
-  })
-  message.value = 'Account preview created. Your information has not been saved to a database.'
+  }))
+  if (!isError.value) {
+    registrationForm.value.password = ''
+    message.value = 'Your account has been created and you are signed in.'
+  }
 }
 
-function signOut() {
-  clearCurrentUser()
-  message.value = 'You have signed out.'
+async function submit(action) {
+  isSubmitting.value = true
+  message.value = ''
+  isError.value = false
+  try {
+    await action()
+  } catch (error) {
+    message.value = error.message
+    isError.value = true
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+async function signOut() {
+  await submit(async () => {
+    await endSession()
+    message.value = 'You have signed out.'
+  })
 }
 </script>
 
@@ -49,9 +84,18 @@ function signOut() {
       <h1>Welcome, {{ currentUser.username }}!</h1>
       <p class="auth-description">{{ currentUser.email }}</p>
       <p class="account-notice">
-        This is a frontend-only account preview. Your information is not saved and will be lost when you leave the page.
+        Your account is saved in the database. Your sign-in session will be restored when you reload the site.
       </p>
-      <button class="auth-submit" type="button" @click="signOut">Sign out</button>
+      <button class="auth-submit" type="button" :disabled="isSubmitting" @click="signOut">
+        {{ isSubmitting ? 'Signing out…' : 'Sign out' }}
+      </button>
+      <p v-if="message" class="auth-message" :class="{ 'auth-error': isError }" role="status" aria-live="polite">
+        {{ message }}
+      </p>
+    </section>
+
+    <section v-else-if="!authInitialized" class="auth-card" role="status">
+      <p class="auth-description">Checking your sign-in session…</p>
     </section>
 
     <section v-else class="auth-card">
@@ -96,7 +140,8 @@ function signOut() {
             v-model="registrationForm.password"
             type="password"
             name="new-password"
-            maxlength="255"
+            minlength="8"
+            maxlength="72"
             autocomplete="new-password"
             placeholder="Choose a password"
             required
@@ -129,7 +174,9 @@ function signOut() {
           ></textarea>
         </label>
 
-        <button class="auth-submit" type="submit">Create account</button>
+        <button class="auth-submit" type="submit" :disabled="isSubmitting">
+          {{ isSubmitting ? 'Creating account…' : 'Create account' }}
+        </button>
       </form>
 
       <form v-else class="auth-form" @submit.prevent="signIn">
@@ -159,10 +206,15 @@ function signOut() {
           >
         </label>
 
-        <button class="auth-submit" type="submit">Sign in</button>
+        <button class="auth-submit" type="submit" :disabled="isSubmitting">
+          {{ isSubmitting ? 'Signing in…' : 'Sign in' }}
+        </button>
       </form>
 
-      <p v-if="message" class="auth-message" role="status" aria-live="polite">{{ message }}</p>
+      <p v-if="authError" class="auth-message auth-error" role="alert">{{ authError }}</p>
+      <p v-if="message" class="auth-message" :class="{ 'auth-error': isError }" role="status" aria-live="polite">
+        {{ message }}
+      </p>
 
       <p class="auth-switch">
         <template v-if="isRegistering">
@@ -285,6 +337,11 @@ function signOut() {
   color: var(--text);
 }
 
+.auth-submit:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
 .auth-switch {
   margin: 24px 0 0;
   color: var(--nav-text);
@@ -310,6 +367,10 @@ function signOut() {
   color: var(--nav-text);
   font-size: 14px;
   line-height: 1.5;
+}
+
+.auth-error {
+  color: #b42318;
 }
 
 .account-card {

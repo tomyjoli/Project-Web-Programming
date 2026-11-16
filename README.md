@@ -80,8 +80,9 @@ Project-Web-Programming/
 ### Configure and start the backend
 
 1. Start MySQL and import `database/bananasplit.sql` using MySQL Workbench or the MySQL command line.
-2. Open `backend/.env` and replace `CHANGE_ME` in `DB_PASSWORD` with your MySQL password. Set `DB_USER` to your MySQL username if it is not `root`. Do not commit this file; it is ignored by Git.
-3. In a PowerShell terminal, install the backend dependencies (first run only) and start the API:
+2. Copy `backend/.env.example` to `backend/.env`, then set your MySQL password in `DB_PASSWORD`. Set `DB_USER` to your MySQL username if it is not `root`. Do not commit `backend/.env`; it is ignored by Git.
+3. For sessions that survive backend restarts, generate a random secret in PowerShell with `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` and put the result in `SESSION_SECRET` in `backend/.env`. A temporary random secret is generated automatically for local development if this is left blank. Production requires an explicit secret.
+4. In a PowerShell terminal, install the backend dependencies (first run only) and start the API:
 
 ```powershell
 cd "C:\path\to\Project-Web-Programming\backend"
@@ -103,6 +104,19 @@ The Recipes page reads its data from these MySQL-backed endpoints:
 | `GET` | `/recipesapi/ingredients` | Ingredients available for filtering recipes. |
 
 The frontend uses `http://localhost:9000` by default. To use a different backend URL, define `VITE_API_BASE_URL` in the frontend environment.
+
+### Authentication API
+
+The sign-up and sign-in forms use database-backed accounts and an HTTP-only session cookie:
+
+| Method | Endpoint | Response |
+| :--- | :--- | :--- |
+| `POST` | `/authapi/register` | Creates an account, hashes its password, and signs the user in. |
+| `POST` | `/authapi/login` | Checks credentials and starts a session. |
+| `GET` | `/authapi/me` | Returns the current public user or `{"user":null}`. |
+| `POST` | `/authapi/logout` | Ends the current session. |
+
+New passwords are stored as bcrypt hashes. The SQL demo accounts have legacy plaintext passwords; on their first successful login, the password is replaced with a bcrypt hash. Use those demo accounts only locally, never for real credentials. Sessions currently use Express's in-memory store, which is suitable for local development but not production; production should use a persistent session store and an HTTPS origin.
 
 ### Start the frontend
 
