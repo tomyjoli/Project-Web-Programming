@@ -50,8 +50,6 @@ Project-Web-Programming/
 │   ├── vite.config.js
 │   ├── package.json
 │   ├── assets/
-│   ├── data/
-│   │   └── bananasplit.json
 │   └── src/
 │       ├── index.vue
 │       ├── main.vue
@@ -152,12 +150,14 @@ Open the local URL printed by Vite (usually `http://localhost:5173`). The fronte
 ## 📅 Project Roadmap & Deliverables Summary
 
 * [x] **SEP/10:** Team formation, topic definition, CRUD plan, ER & Table Structure diagrams.
-* [x] **SEP/17:** Full SQL script (`DROP` / `CREATE` / `INSERT`), mock JSON dataset ([`src/data/bananasplit.json`](./src/data/bananasplit.json)), `.gitignore`, and initial `README.md`.
+* [x] **SEP/17:** Full SQL script (`DROP` / `CREATE` / `INSERT`), `.gitignore`, and initial `README.md`.
 * [x] **OCT/15:** Project-level UML Use Case diagram, Planned Gantt chart, Vue.js Frontend with 3+ list/table/reader views powered by JSON, and multi-branch Git workflow.
 * [ ] **OCT/29:** Member-level UML diagrams (Wireframe, Activity, Sequence) & Full Frontend CRUD with JSON.
 * [ ] **NOV/26:** Component & Class diagrams + Express.js MVC Backend repository.
 * [ ] **DEC/04:** Frontend-Backend integration via Fetch API, Authentication/Authorization, and updated diagrams.
 * [ ] **DEC/17:** Final Project Defense & Complete Documentation PDF.
+
+The old frontend mock JSON dataset has been removed. Recipes, ingredients, accounts, and albums are loaded from the MySQL-backed API.
 
 ---
 
