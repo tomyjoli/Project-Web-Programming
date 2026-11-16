@@ -36,13 +36,16 @@ function validateRecipe(body) {
     errors.push('photo_url must be 255 characters or fewer.');
   }
   if (recipe.photo_url) {
-    try {
-      const photoUrl = new URL(recipe.photo_url);
-      if (!['http:', 'https:'].includes(photoUrl.protocol)) {
-        errors.push('photo_url must use HTTP or HTTPS.');
+    const localAssetPath = /^src\/assets\/[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$/.test(recipe.photo_url);
+    if (!localAssetPath) {
+      try {
+        const photoUrl = new URL(recipe.photo_url);
+        if (!['http:', 'https:'].includes(photoUrl.protocol)) {
+          errors.push('photo_url must use HTTP or HTTPS.');
+        }
+      } catch {
+        errors.push('photo_url must be a valid HTTP or HTTPS URL.');
       }
-    } catch {
-      errors.push('photo_url must be a valid HTTP or HTTPS URL.');
     }
   }
   if (recipe.preparation_time != null

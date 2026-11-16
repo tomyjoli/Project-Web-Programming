@@ -103,10 +103,15 @@ The Recipes page reads its data from these MySQL-backed endpoints:
 | `GET` | `/recipesapi/recipes/:recipeId` | One recipe with its reviews and full details. |
 | `GET` | `/recipesapi/ingredients` | Ingredients available for filtering recipes. |
 | `POST` | `/recipesapi/recipes` | Publishes a recipe with ingredients and preparation steps for the signed-in user. |
+| `GET` | `/recipesapi/recipes/mine` | Lists only the signed-in user's recipes. |
+| `PUT` | `/recipesapi/recipes/:recipeId` | Updates a recipe and its ingredients/steps, only for its owner. |
+| `DELETE` | `/recipesapi/recipes/:recipeId` | Deletes a recipe, only for its owner. |
 
 The frontend uses `http://localhost:9000` by default. To use a different backend URL, define `VITE_API_BASE_URL` in the frontend environment.
 
 The Share page requires a signed-in session. Recipe creation writes the recipe and all its ingredient/step rows in one database transaction. The recipe owner is taken from the session cookie; any user ID submitted by the browser is ignored.
+
+The Albums page's “My published recipes” section lists and edits recipes owned by the signed-in user. Deleting a recipe also deletes its reviews through the database foreign-key cascade. Fridge persistence and assigning recipes to albums are not yet connected to the API.
 
 ### Authentication API
 

@@ -59,9 +59,18 @@ async function loadRecipeDetails(recipes, includeReviews = false, executor = db)
     }));
 }
 
-async function findRecipes({ recipeId } = {}, executor = db) {
-    const where = recipeId ? 'WHERE r.recipe_id = ?' : '';
-    const params = recipeId ? [recipeId] : [];
+async function findRecipes({ recipeId, userId } = {}, executor = db) {
+    const conditions = [];
+    const params = [];
+    if (recipeId) {
+        conditions.push('r.recipe_id = ?');
+        params.push(recipeId);
+    }
+    if (userId) {
+        conditions.push('r.user_id = ?');
+        params.push(userId);
+    }
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const [recipes] = await executor.execute(
         `SELECT r.recipe_id, r.user_id, r.title, r.category, r.description,
                 r.photo_url, r.preparation_time, r.created_at, r.glass_name, r.capacity_cl,
@@ -93,6 +102,15 @@ router.get('/ingredients', async (_req, res) => {
     }
 });
 
+router.get('/recipes/mine', requireAuth, async (req, res) => {
+    try {
+        const recipes = await findRecipes({ userId: req.session.userId });
+        return res.json(await loadRecipeDetails(recipes, true));
+    } catch (error) {
+        return sendDatabaseError(res, error, 'load your recipes');
+    }
+});
+
 router.post('/recipes', requireAuth, async (req, res) => {
     const body = req.body && typeof req.body === 'object' ? req.body : {};
     const recipe = body.recipe && typeof body.recipe === 'object' ? body.recipe : {};
@@ -106,8 +124,9 @@ router.post('/recipes', requireAuth, async (req, res) => {
         return res.status(400).json({ error: errors[0], details: errors });
     }
 
-    const connection = await db.getConnection();
+    let connection;
     try {
+        connection = await db.getConnection();
         await connection.beginTransaction();
 
         const ingredientIds = payload.recipe_ingredients.map((item) => positiveInteger(item.ingredient_id));
@@ -165,16 +184,143 @@ router.post('/recipes', requireAuth, async (req, res) => {
         await connection.commit();
         return res.status(201).json(createdRecipe);
     } catch (error) {
-        await connection.rollback().catch((rollbackError) => {
-            console.error('Unable to rollback recipe creation:', rollbackError.code || rollbackError.message);
-        });
+        if (connection) {
+            await connection.rollback().catch((rollbackError) => {
+                console.error('Unable to rollback recipe creation:', rollbackError.code || rollbackError.message);
+            });
+        }
         if (error.code === 'ER_NO_REFERENCED_ROW_2') {
             return res.status(400).json({ error: 'One or more selected ingredients do not exist.' });
         }
         console.error('Unable to create recipe:', error.code || error.message);
         return res.status(500).json({ error: 'Unable to create recipe.' });
     } finally {
-        connection.release();
+        connection?.release();
+    }
+});
+
+router.put('/recipes/:recipeId', requireAuth, async (req, res) => {
+    const recipeId = positiveInteger(req.params.recipeId);
+    if (!recipeId) {
+        return res.status(400).json({ error: 'Recipe id must be a positive integer.' });
+    }
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const recipe = body.recipe && typeof body.recipe === 'object' ? body.recipe : {};
+    const payload = {
+        ...recipe,
+        recipe_ingredients: body.recipe_ingredients,
+        preparation_steps: body.preparation_steps,
+    };
+    const errors = validateRecipe(payload);
+    if (errors.length) {
+        return res.status(400).json({ error: errors[0], details: errors });
+    }
+
+    let connection;
+    try {
+        connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        const [ownedRecipes] = await connection.execute(
+            'SELECT recipe_id FROM RECIPE WHERE recipe_id = ? AND user_id = ? FOR UPDATE',
+            [recipeId, req.session.userId],
+        );
+        if (!ownedRecipes.length) {
+            await connection.rollback();
+            return res.status(404).json({ error: 'Recipe not found.' });
+        }
+
+        const ingredientIds = payload.recipe_ingredients.map((item) => positiveInteger(item.ingredient_id));
+        const placeholders = ingredientIds.map(() => '?').join(', ');
+        const [existingIngredients] = await connection.execute(
+            `SELECT ingredient_id FROM INGREDIENT WHERE ingredient_id IN (${placeholders})`,
+            ingredientIds,
+        );
+        if (existingIngredients.length !== ingredientIds.length) {
+            await connection.rollback();
+            return res.status(400).json({ error: 'One or more selected ingredients do not exist.' });
+        }
+
+        await connection.execute(
+            `UPDATE RECIPE
+             SET title = ?, category = ?, description = ?, photo_url = ?, preparation_time = ?,
+                 glass_name = ?, capacity_cl = ?
+             WHERE recipe_id = ? AND user_id = ?`,
+            [
+                recipe.title.trim(),
+                recipe.category.trim(),
+                recipe.description?.trim() || null,
+                recipe.photo_url?.trim() || null,
+                recipe.preparation_time == null || recipe.preparation_time === ''
+                    ? null
+                    : Number(recipe.preparation_time),
+                recipe.glass_name.trim(),
+                Number(recipe.capacity_cl),
+                recipeId,
+                req.session.userId,
+            ],
+        );
+        await connection.execute('DELETE FROM RECIPE_INGREDIENT WHERE recipe_id = ?', [recipeId]);
+        await connection.execute('DELETE FROM PREPARATION_STEP WHERE recipe_id = ?', [recipeId]);
+
+        for (const ingredient of payload.recipe_ingredients) {
+            await connection.execute(
+                `INSERT INTO RECIPE_INGREDIENT (recipe_id, ingredient_id, quantity, unit_of_measure)
+                 VALUES (?, ?, ?, ?)`,
+                [
+                    recipeId,
+                    Number(ingredient.ingredient_id),
+                    Number(ingredient.quantity),
+                    ingredient.unit_of_measure.trim(),
+                ],
+            );
+        }
+        for (const [index, step] of payload.preparation_steps.entries()) {
+            await connection.execute(
+                `INSERT INTO PREPARATION_STEP (recipe_id, step_number, instruction)
+                 VALUES (?, ?, ?)`,
+                [recipeId, index + 1, step.instruction.trim()],
+            );
+        }
+
+        const updatedRecipes = await findRecipes({ recipeId }, connection);
+        const [updatedRecipe] = await loadRecipeDetails(updatedRecipes, true, connection);
+        await connection.commit();
+        return res.json(updatedRecipe);
+    } catch (error) {
+        if (connection) {
+            await connection.rollback().catch((rollbackError) => {
+                console.error('Unable to rollback recipe update:', rollbackError.code || rollbackError.message);
+            });
+        }
+        if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+            return res.status(400).json({ error: 'One or more selected ingredients do not exist.' });
+        }
+        console.error('Unable to update recipe:', error.code || error.message);
+        return res.status(500).json({ error: 'Unable to update recipe.' });
+    } finally {
+        connection?.release();
+    }
+});
+
+router.delete('/recipes/:recipeId', requireAuth, async (req, res) => {
+    const recipeId = positiveInteger(req.params.recipeId);
+    if (!recipeId) {
+        return res.status(400).json({ error: 'Recipe id must be a positive integer.' });
+    }
+
+    try {
+        const [result] = await db.execute(
+            'DELETE FROM RECIPE WHERE recipe_id = ? AND user_id = ?',
+            [recipeId, req.session.userId],
+        );
+        if (!result.affectedRows) {
+            return res.status(404).json({ error: 'Recipe not found.' });
+        }
+        return res.json({ success: true, recipe_id: recipeId });
+    } catch (error) {
+        console.error('Unable to delete recipe:', error.code || error.message);
+        return res.status(500).json({ error: 'Unable to delete recipe.' });
     }
 });
 
