@@ -1,6 +1,6 @@
 <script setup>
-import { computed, ref } from 'vue'
-import recipeData from '../data/bananasplit.json'
+import { computed, onMounted, ref } from 'vue'
+import { apiGet } from './api.js'
 import pineappleVodkaImage from '../assets/pineapple_vodka.jpg'
 import rumSunriseImage from '../assets/rum_sunrise.jpg'
 import limeGrenadineFizzImage from '../assets/lime_grenadine_fizz.jpg'
@@ -15,8 +15,13 @@ const selectedIngredient = ref('')
 const maximumPreparationTime = ref('')
 const expandedSections = ref({})
 const selectedRecipeId = ref(null)
+const recipes = ref([])
+const ingredients = ref([])
+const loading = ref(true)
+const detailLoading = ref(false)
+const error = ref('')
 const selectedRecipe = computed(() => (
-  recipes.find((recipe) => recipe.recipe_id === selectedRecipeId.value) ?? null
+  recipes.value.find((recipe) => recipe.recipe_id === selectedRecipeId.value) ?? null
 ))
 
 const recipeImages = {
@@ -32,41 +37,46 @@ const recipeImages = {
   10: cappuccinoImage,
 }
 
-const ingredients = recipeData.ingredients
+onMounted(loadRecipes)
 
-const recipes = recipeData.recipes.map((recipe) => {
-  const creator = recipeData.users.find((user) => user.user_id === recipe.user_id)
-  const recipeIngredients = recipeData.recipe_ingredients
-    .filter((entry) => entry.recipe_id === recipe.recipe_id)
-    .map((entry) => ({
-      ...ingredients.find((ingredient) => ingredient.ingredient_id === entry.ingredient_id),
-      quantity: entry.quantity,
-      unit_of_measure: entry.unit_of_measure,
-    }))
-  const reviews = recipeData.reviews.filter((review) => review.recipe_id === recipe.recipe_id)
-  const averageRating = reviews.length
-    ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length
-    : null
-  const preparationSteps = recipeData.preparation_steps
-    .filter((step) => step.recipe_id === recipe.recipe_id)
-    .sort((first, second) => first.step_number - second.step_number)
+async function loadRecipes() {
+  loading.value = true
+  error.value = ''
+
+  try {
+    const [recipeResults, ingredientResults] = await Promise.all([
+      apiGet('/recipesapi/recipes'),
+      apiGet('/recipesapi/ingredients'),
+    ])
+    recipes.value = recipeResults.map(normalizeRecipe)
+    ingredients.value = ingredientResults
+  } catch (requestError) {
+    error.value = requestError.message
+  } finally {
+    loading.value = false
+  }
+}
+
+function normalizeRecipe(recipe) {
+  const photoUrl = recipe.photo_url
 
   return {
     ...recipe,
-    creator: creator.username,
-    ingredients: recipeIngredients,
-    image: recipeImages[recipe.recipe_id],
-    averageRating,
-    reviewCount: reviews.length,
-    preparationSteps,
-    reviews: [],
+    image: photoUrl?.startsWith('http') && !photoUrl.includes('example.com')
+      ? photoUrl
+      : recipeImages[recipe.recipe_id] || '',
+    averageRating: recipe.averageRating == null ? null : Number(recipe.averageRating),
+    reviewCount: Number(recipe.reviewCount || 0),
+    ingredients: recipe.ingredients || [],
+    preparationSteps: recipe.preparationSteps || [],
+    reviews: recipe.reviews || [],
   }
-})
+}
 
 const filteredRecipes = computed(() => {
   const search = searchText.value.trim().toLowerCase()
 
-  return recipes.filter((recipe) => {
+  return recipes.value.filter((recipe) => {
     const matchesSearch = `${recipe.title} ${recipe.creator}`.toLowerCase().includes(search)
     const matchesIngredient = !selectedIngredient.value
       || recipe.ingredients.some((ingredient) => ingredient.ingredient_id === Number(selectedIngredient.value))
@@ -112,16 +122,34 @@ function toggleSection(sectionId) {
 
 function openRecipe(recipe) {
   selectedRecipeId.value = recipe.recipe_id
+  detailLoading.value = true
+  error.value = ''
+  apiGet(`/recipesapi/recipes/${recipe.recipe_id}`)
+    .then((result) => {
+      recipes.value = recipes.value.map((item) => (
+        item.recipe_id === recipe.recipe_id ? normalizeRecipe(result) : item
+      ))
+    })
+    .catch((requestError) => {
+      error.value = requestError.message
+    })
+    .finally(() => {
+      detailLoading.value = false
+    })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 function closeRecipe() {
   selectedRecipeId.value = null
+  error.value = ''
 }
 </script>
 
 <template>
   <main class="recipes-page">
+    <p v-if="loading" class="request-message" role="status">Loading recipes from the database…</p>
+    <p v-if="error" class="request-message request-error" role="alert">{{ error }}</p>
+
     <section v-if="!selectedRecipe" class="recipes-introduction">
       <h1>Find your next favorite cocktail</h1>
       <p>Search recipes by name, creator, or ingredients you already have.</p>
@@ -162,7 +190,7 @@ function closeRecipe() {
       </label>
     </section>
 
-    <section v-if="!selectedRecipe" class="recipe-results" aria-live="polite">
+    <section v-if="!selectedRecipe && !loading && !error" class="recipe-results" aria-live="polite">
       <p class="results-count">
         {{ filteredRecipes.length }}
         {{ filteredRecipes.length === 1 ? 'recipe' : 'recipes' }}
@@ -199,7 +227,10 @@ function closeRecipe() {
               @keydown.enter="openRecipe(recipe)"
               @keydown.space.prevent="openRecipe(recipe)"
             >
-              <img class="recipe-image" :src="recipe.image" :alt="recipe.title">
+              <img v-if="recipe.image" class="recipe-image" :src="recipe.image" :alt="recipe.title">
+              <div v-else class="recipe-image recipe-image-placeholder" aria-hidden="true">
+                Recipe photo
+              </div>
               <div class="recipe-card-content">
                 <p class="recipe-creator">By {{ recipe.creator }}</p>
                 <h3>{{ recipe.title }}</h3>
@@ -212,7 +243,9 @@ function closeRecipe() {
                   </template>
                   <template v-else>No reviews yet</template>
                 </p>
-                <p class="recipe-time">{{ Math.ceil(recipe.preparation_time / 60) }} min</p>
+                <p v-if="recipe.preparation_time" class="recipe-time">
+                  {{ Math.ceil(recipe.preparation_time / 60) }} min
+                </p>
                 <ul class="ingredient-list" aria-label="Ingredients">
                   <li
                     v-for="ingredient in recipe.ingredients"
@@ -232,22 +265,28 @@ function closeRecipe() {
       </p>
     </section>
 
-    <article v-else class="recipe-detail">
+    <article v-if="selectedRecipe" class="recipe-detail">
       <button class="back-button" type="button" @click="closeRecipe">
         <span aria-hidden="true">←</span> Back to recipes
       </button>
 
+      <p v-if="detailLoading" class="request-message" role="status">Loading recipe details…</p>
+      <template v-else>
       <section class="detail-overview">
-        <img class="detail-image" :src="selectedRecipe.image" :alt="selectedRecipe.title">
+        <img v-if="selectedRecipe.image" class="detail-image" :src="selectedRecipe.image" :alt="selectedRecipe.title">
+        <div v-else class="detail-image detail-image-placeholder" aria-hidden="true">Recipe photo</div>
         <div class="detail-summary">
           <p class="recipe-creator">By {{ selectedRecipe.creator }}</p>
           <p class="detail-category">{{ selectedRecipe.category }}</p>
           <h1>{{ selectedRecipe.title }}</h1>
           <p class="detail-description">{{ selectedRecipe.description }}</p>
           <p class="detail-meta">
-            {{ Math.ceil(selectedRecipe.preparation_time / 60) }} min
+            <template v-if="selectedRecipe.preparation_time">
+              {{ Math.ceil(selectedRecipe.preparation_time / 60) }} min
+            </template>
+            <template v-else>Time not specified</template>
             <span aria-hidden="true">·</span>
-            {{ selectedRecipe.glass_name }} glass
+            {{ selectedRecipe.glass_name }}
             <span aria-hidden="true">·</span>
             {{ selectedRecipe.capacity_cl }} cl
           </p>
@@ -279,8 +318,11 @@ function closeRecipe() {
       <section class="detail-section" aria-labelledby="reviews-heading">
         <div class="reviews-heading">
           <h2 id="reviews-heading">Reviews and ratings</h2>
-          <span>{{ selectedRecipe.reviews.length }}</span>
+          <span>{{ selectedRecipe.reviewCount }}</span>
         </div>
+        <p v-if="selectedRecipe.reviewCount" class="average-rating">
+          Average rating: ★ {{ selectedRecipe.averageRating?.toFixed(1) }} / 5
+        </p>
         <ul v-if="selectedRecipe.reviews.length" class="review-list">
           <li v-for="review in selectedRecipe.reviews" :key="review.review_id" class="review-card">
             <div class="review-card-heading">
@@ -294,9 +336,10 @@ function closeRecipe() {
           </li>
         </ul>
         <p v-else class="empty-detail">
-          No reviews yet. Reviews will be available once the backend is connected.
+          No reviews have been submitted yet.
         </p>
       </section>
+      </template>
     </article>
   </main>
 </template>
@@ -667,6 +710,33 @@ function closeRecipe() {
   background-color: var(--page-bg);
   color: var(--nav-text);
   line-height: 1.6;
+}
+
+.recipe-image-placeholder,
+.detail-image-placeholder {
+  display: grid;
+  place-items: center;
+  background-color: var(--page-bg);
+  color: var(--nav-text);
+}
+
+.average-rating {
+  margin: -4px 0 18px;
+  color: var(--button);
+  font-weight: 700;
+}
+
+.request-message {
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  border-radius: 6px;
+  background-color: var(--surface);
+  color: var(--nav-text);
+}
+
+.request-error {
+  border: 1px solid #b42318;
+  color: #b42318;
 }
 
 </style>

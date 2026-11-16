@@ -91,6 +91,19 @@ npm start
 
 The API listens on `http://localhost:9000`. Check `http://localhost:9000/api/v1/health`; a successful response is `{"status":"ok","database":"connected"}`. An HTTP 503 means the API started but could not connect to MySQL; check that MySQL is running and that `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, and `DB_NAME` in `backend/.env` are correct.
 
+### Recipe read API
+
+The Recipes page reads its data from these MySQL-backed endpoints:
+
+| Method | Endpoint | Response |
+| :--- | :--- | :--- |
+| `GET` | `/recipesapi/recipes` | Recipes with creator, rating summary, ingredients, and preparation steps. |
+| `GET` | `/recipesapi/list` | Backwards-compatible alias for the recipe list. |
+| `GET` | `/recipesapi/recipes/:recipeId` | One recipe with its reviews and full details. |
+| `GET` | `/recipesapi/ingredients` | Ingredients available for filtering recipes. |
+
+The frontend uses `http://localhost:9000` by default. To use a different backend URL, define `VITE_API_BASE_URL` in the frontend environment.
+
 ### Start the frontend
 
 Keep the backend terminal running. Open a second PowerShell terminal and run:
