@@ -1,20 +1,22 @@
 <script setup>
-import { computed, ref } from 'vue'
-import recipeData from '../data/bananasplit.json'
+import { computed, onMounted, ref } from 'vue'
+import { apiGet } from './api.js'
 
 const searchText = ref('')
 const selectedCategory = ref('')
 const selectedLegality = ref('')
+const ingredients = ref([])
+const loading = ref(true)
+const error = ref('')
 
-const ingredients = recipeData.ingredients
-
-const categories = [...new Set(ingredients.map((ingredient) => ingredient.category_name))]
-  .sort((first, second) => first.localeCompare(second))
+const categories = computed(() => [...new Set(
+  ingredients.value.map((ingredient) => ingredient.category_name),
+)].sort((first, second) => first.localeCompare(second)))
 
 const filteredIngredients = computed(() => {
   const search = searchText.value.trim().toLowerCase()
 
-  return ingredients
+  return ingredients.value
     .filter((ingredient) => {
       const matchesSearch = [
         ingredient.ingredient_name,
@@ -30,6 +32,26 @@ const filteredIngredients = computed(() => {
     })
     .sort((first, second) => first.ingredient_name.localeCompare(second.ingredient_name))
 })
+
+onMounted(loadIngredients)
+
+async function loadIngredients() {
+  loading.value = true
+  error.value = ''
+  try {
+    const result = await apiGet('/recipesapi/ingredients')
+    ingredients.value = result.map((ingredient) => ({
+      ...ingredient,
+      is_legal: ingredient.is_legal === true || Number(ingredient.is_legal) === 1,
+      alcohol_degree: ingredient.alcohol_degree == null ? null : Number(ingredient.alcohol_degree),
+      average_price: ingredient.average_price == null ? null : Number(ingredient.average_price),
+    }))
+  } catch (requestError) {
+    error.value = requestError.message
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
@@ -69,7 +91,13 @@ const filteredIngredients = computed(() => {
       </label>
     </section>
 
-    <section class="ingredient-results" aria-live="polite">
+    <p v-if="loading" class="request-message" role="status">Loading ingredients from the database…</p>
+    <section v-if="error" class="request-message request-error" role="alert">
+      <p>{{ error }}</p>
+      <button type="button" class="retry-button" @click="loadIngredients">Try again</button>
+    </section>
+
+    <section v-if="!loading && !error" class="ingredient-results" aria-live="polite">
       <p class="results-count">
         {{ filteredIngredients.length }}
         {{ filteredIngredients.length === 1 ? 'ingredient' : 'ingredients' }}
@@ -280,6 +308,34 @@ const filteredIngredients = computed(() => {
   border-radius: 10px;
   background-color: var(--surface);
   text-align: center;
+}
+
+.request-message {
+  margin: 0 0 18px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  background-color: var(--surface);
+  color: var(--nav-text);
+}
+
+.request-message p {
+  margin: 0 0 10px;
+}
+
+.request-error {
+  border: 1px solid #b42318;
+  color: #b42318;
+}
+
+.retry-button {
+  padding: 8px 12px;
+  border: 1px solid var(--button);
+  border-radius: 6px;
+  background-color: var(--button);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 </style>
