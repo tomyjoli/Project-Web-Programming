@@ -285,10 +285,15 @@ function closeRecipe() {
               {{ Math.ceil(selectedRecipe.preparation_time / 60) }} min
             </template>
             <template v-else>Time not specified</template>
-            <span aria-hidden="true">·</span>
-            {{ selectedRecipe.glass_name }}
-            <span aria-hidden="true">·</span>
-            {{ selectedRecipe.capacity_cl }} cl
+            <template v-if="selectedRecipe.glass_name || selectedRecipe.capacity_cl">
+              <span aria-hidden="true">·</span>
+              <template v-if="selectedRecipe.glass_name">{{ selectedRecipe.glass_name }}</template>
+              <span
+                v-if="selectedRecipe.glass_name && selectedRecipe.capacity_cl"
+                aria-hidden="true"
+              >·</span>
+              <template v-if="selectedRecipe.capacity_cl">{{ selectedRecipe.capacity_cl }} cl</template>
+            </template>
           </p>
           <div class="detail-ingredients">
             <h2>Ingredients</h2>

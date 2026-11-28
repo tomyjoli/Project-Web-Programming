@@ -153,8 +153,8 @@ router.post('/recipes', requireAuth, async (req, res) => {
                 recipe.preparation_time == null || recipe.preparation_time === ''
                     ? null
                     : Number(recipe.preparation_time),
-                recipe.glass_name.trim(),
-                Number(recipe.capacity_cl),
+                recipe.glass_name?.trim() || '',
+                recipe.capacity_cl == null || recipe.capacity_cl === '' ? 0 : Number(recipe.capacity_cl),
             ],
         );
 
@@ -254,8 +254,8 @@ router.put('/recipes/:recipeId', requireAuth, async (req, res) => {
                 recipe.preparation_time == null || recipe.preparation_time === ''
                     ? null
                     : Number(recipe.preparation_time),
-                recipe.glass_name.trim(),
-                Number(recipe.capacity_cl),
+                recipe.glass_name?.trim() || '',
+                recipe.capacity_cl == null || recipe.capacity_cl === '' ? 0 : Number(recipe.capacity_cl),
                 recipeId,
                 req.session.userId,
             ],

@@ -75,8 +75,8 @@ function startEditing(recipe) {
     description: recipe.description || '',
     photo_url: recipe.photo_url || '',
     preparation_time: recipe.preparation_time ?? '',
-    glass_name: recipe.glass_name,
-    capacity_cl: recipe.capacity_cl,
+    glass_name: recipe.glass_name || '',
+    capacity_cl: recipe.capacity_cl || '',
     recipe_ingredients: recipe.ingredients.map((item) => ({
       rowId: nextEditorRowId++,
       ingredient_id: item.ingredient_id,
@@ -134,8 +134,8 @@ async function saveRecipe() {
           preparation_time: recipeForm.value.preparation_time
             ? Number(recipeForm.value.preparation_time)
             : null,
-          glass_name: recipeForm.value.glass_name,
-          capacity_cl: Number(recipeForm.value.capacity_cl),
+          glass_name: recipeForm.value.glass_name || null,
+          capacity_cl: recipeForm.value.capacity_cl ? Number(recipeForm.value.capacity_cl) : null,
         },
         recipe_ingredients: recipeForm.value.recipe_ingredients.map((item) => ({
           ingredient_id: Number(item.ingredient_id),
@@ -381,7 +381,11 @@ async function removeRecipeFromAlbum(recipe) {
           >
             <div>
               <h4>{{ recipe.title }}</h4>
-              <p>{{ recipe.category }} · {{ recipe.glass_name }} · {{ recipe.capacity_cl }} cl</p>
+              <p>
+                {{ recipe.category }}
+                <template v-if="recipe.glass_name"> · {{ recipe.glass_name }}</template>
+                <template v-if="recipe.capacity_cl"> · {{ recipe.capacity_cl }} cl</template>
+              </p>
             </div>
             <button type="button" class="remove-from-album-button" @click="removeRecipeFromAlbum(recipe)">
               Remove
@@ -449,12 +453,12 @@ async function removeRecipeFromAlbum(recipe) {
 
           <div class="editor-row">
             <label class="editor-field">
-              <span>Glass name</span>
-              <input v-model.trim="recipeForm.glass_name" maxlength="50" required>
+              <span>Glass name (optional)</span>
+              <input v-model.trim="recipeForm.glass_name" maxlength="50">
             </label>
             <label class="editor-field">
-              <span>Glass capacity (cl)</span>
-              <input v-model="recipeForm.capacity_cl" type="number" min="1" step="1" required>
+              <span>Glass capacity (cl, optional)</span>
+              <input v-model="recipeForm.capacity_cl" type="number" min="1" step="1">
             </label>
           </div>
 

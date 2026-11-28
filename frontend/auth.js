@@ -47,6 +47,24 @@ export async function registerAccount(account) {
   return user
 }
 
+export async function updateProfile(profile) {
+  const { user } = await apiRequest('/authapi/me', {
+    method: 'PUT',
+    body: profile,
+  })
+  currentUser.value = user
+  authError.value = ''
+  initializationPromise = Promise.resolve({ user })
+  return user
+}
+
+export async function deleteAccount() {
+  await apiRequest('/authapi/me', { method: 'DELETE' })
+  currentUser.value = null
+  authError.value = ''
+  initializationPromise = Promise.resolve({ user: null })
+}
+
 export async function signOut() {
   await apiRequest('/authapi/logout', { method: 'POST' })
   currentUser.value = null

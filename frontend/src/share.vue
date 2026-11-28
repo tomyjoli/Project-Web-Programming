@@ -6,6 +6,21 @@ import { authError, authInitialized, currentUser, initializeAuth } from '../auth
 
 let nextRowId = 1
 
+const recipeCategories = [
+  'Cocktail',
+  'Milkshake',
+  'Mocktail',
+  'Juice',
+  'Coffee',
+  'Tea',
+  'Punch',
+  'Smoothie',
+  'Soft drink',
+  'Lemonade',
+  'Hot drink',
+  'Original creation',
+]
+
 function emptyForm() {
   return {
     title: '',
@@ -91,8 +106,8 @@ async function submitRecipe() {
           preparation_time: form.value.preparation_time
             ? Number(form.value.preparation_time)
             : null,
-          glass_name: form.value.glass_name,
-          capacity_cl: Number(form.value.capacity_cl),
+          glass_name: form.value.glass_name || null,
+          capacity_cl: form.value.capacity_cl ? Number(form.value.capacity_cl) : null,
         },
         recipe_ingredients: ingredients.value.map((ingredient) => ({
           ingredient_id: Number(ingredient.ingredient_id),
@@ -194,7 +209,12 @@ async function submitRecipe() {
             <div class="form-row">
               <label class="form-field">
                 <span>Category</span>
-                <input v-model.trim="form.category" type="text" maxlength="100" placeholder="e.g. Cocktail, Milkshake" required>
+                <select v-model="form.category" required>
+                  <option value="" disabled>Choose a category</option>
+                  <option v-for="category in recipeCategories" :key="category" :value="category">
+                    {{ category }}
+                  </option>
+                </select>
               </label>
 
               <label class="form-field">
@@ -216,12 +236,12 @@ async function submitRecipe() {
             <div class="form-row">
               <label class="form-field">
                 <span>Glass name</span>
-                <input v-model.trim="form.glass_name" type="text" maxlength="50" placeholder="e.g. Highball" required>
+                <input v-model.trim="form.glass_name" type="text" maxlength="50" placeholder="e.g. Highball">
               </label>
 
               <label class="form-field">
                 <span>Glass capacity (cl)</span>
-                <input v-model="form.capacity_cl" type="number" min="1" step="1" placeholder="30" required>
+                <input v-model="form.capacity_cl" type="number" min="1" step="1" placeholder="30">
               </label>
             </div>
           </div>

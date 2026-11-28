@@ -109,6 +109,8 @@ The frontend uses `http://localhost:9000` by default. To use a different backend
 
 The Share page requires a signed-in session. Recipe creation writes the recipe and all its ingredient/step rows in one database transaction. The recipe owner is taken from the session cookie; any user ID submitted by the browser is ignored.
 
+Glass name and capacity are optional recipe details. No database migration is needed.
+
 The Albums page saves each user's fridges to MySQL and lets them add their own recipes to multiple fridges, or remove a recipe from a fridge without deleting it. Album ownership and recipe ownership are checked by the API.
 
 | Method | Endpoint | Response |
@@ -130,7 +132,11 @@ The sign-up and sign-in forms use database-backed accounts and an HTTP-only sess
 | `POST` | `/authapi/register` | Creates an account, hashes its password, and signs the user in. |
 | `POST` | `/authapi/login` | Checks credentials and starts a session. |
 | `GET` | `/authapi/me` | Returns the current public user or `{"user":null}`. |
+| `PUT` | `/authapi/me` | Updates the signed-in user's name, email, bio, date of birth, and profile photo URL. |
+| `DELETE` | `/authapi/me` | Deletes the signed-in user's account and ends the session. |
 | `POST` | `/authapi/logout` | Ends the current session. |
+
+Deleting an account also deletes that user's recipes, albums, and reviews through database foreign-key cascades.
 
 New passwords are stored as bcrypt hashes. The SQL demo accounts have legacy plaintext passwords; on their first successful login, the password is replaced with a bcrypt hash. Use those demo accounts only locally, never for real credentials. Sessions currently use Express's in-memory store, which is suitable for local development but not production; production should use a persistent session store and an HTTPS origin.
 

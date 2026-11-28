@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const express = require('express');
 const db = require('../utils/db.include');
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 const passwordRounds = 12;
@@ -11,7 +12,9 @@ function publicUser(user) {
         username: user.username,
         email: user.email,
         bio: user.bio,
-        date_of_birth: user.date_of_birth,
+        date_of_birth: user.date_of_birth instanceof Date
+            ? `${user.date_of_birth.getFullYear()}-${String(user.date_of_birth.getMonth() + 1).padStart(2, '0')}-${String(user.date_of_birth.getDate()).padStart(2, '0')}`
+            : user.date_of_birth,
         profile_picture_url: user.profile_picture_url,
         created_at: user.created_at,
     };
@@ -88,6 +91,99 @@ router.get('/me', async (req, res) => {
     } catch (error) {
         console.error('Unable to load the current user:', error.code || error.message);
         return res.status(500).json({ error: 'Unable to load the current user.' });
+    }
+});
+
+router.put('/me', requireAuth, async (req, res) => {
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const username = typeof body.username === 'string' ? body.username.trim() : '';
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const bio = body.bio == null ? '' : body.bio;
+    const dateOfBirth = body.date_of_birth == null ? '' : body.date_of_birth;
+    const pictureUrl = body.profile_picture_url == null ? '' : body.profile_picture_url;
+    const errors = [];
+
+    if (!username || username.length > 50) {
+        errors.push('Name is required and must be 50 characters or fewer.');
+    }
+    if (!email || email.length > 100 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errors.push('A valid email address of 100 characters or fewer is required.');
+    }
+    if (typeof bio !== 'string' || bio.length > 2000) {
+        errors.push('Bio must be 2,000 characters or fewer.');
+    }
+    if (typeof dateOfBirth !== 'string') {
+        errors.push('Date of birth must be a valid date.');
+    } else if (dateOfBirth !== '') {
+        const parsedDate = new Date(`${dateOfBirth}T00:00:00Z`);
+        if (Number.isNaN(parsedDate.getTime()) || parsedDate.toISOString().slice(0, 10) !== dateOfBirth) {
+            errors.push('Date of birth must be a valid date.');
+        }
+    }
+    if (typeof pictureUrl !== 'string') {
+        errors.push('Profile picture URL must be a valid HTTP or HTTPS URL.');
+    } else if (pictureUrl !== '') {
+        let parsedUrl;
+        try {
+            parsedUrl = new URL(pictureUrl);
+        } catch {
+            errors.push('Profile picture URL must be a valid HTTP or HTTPS URL.');
+        }
+        if (pictureUrl.length > 255 || (parsedUrl && !['http:', 'https:'].includes(parsedUrl.protocol))) {
+            errors.push('Profile picture URL must be an HTTP or HTTPS URL of 255 characters or fewer.');
+        }
+    }
+    if (errors.length) {
+        return res.status(400).json({ error: errors[0], details: errors });
+    }
+
+    try {
+        await db.execute(
+            `UPDATE USER
+             SET username = ?, email = ?, bio = ?, date_of_birth = ?, profile_picture_url = ?
+             WHERE user_id = ?`,
+            [username, email, bio.trim() || null, dateOfBirth || null, pictureUrl.trim() || null, req.session.userId],
+        );
+        const [users] = await db.execute(
+            `SELECT user_id, username, email, bio, date_of_birth, profile_picture_url, created_at
+             FROM USER
+             WHERE user_id = ?`,
+            [req.session.userId],
+        );
+        if (!users.length) {
+            return res.status(404).json({ error: 'Account not found.' });
+        }
+        return res.json({ user: publicUser(users[0]) });
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'That name or email address is already in use.' });
+        }
+        console.error('Unable to update user profile:', error.code || error.message);
+        return res.status(500).json({ error: 'Unable to update the profile.' });
+    }
+});
+
+router.delete('/me', requireAuth, async (req, res) => {
+    try {
+        const [result] = await db.execute(
+            'DELETE FROM USER WHERE user_id = ?',
+            [req.session.userId],
+        );
+        if (!result.affectedRows) {
+            return res.status(404).json({ error: 'Account not found.' });
+        }
+        return req.session.destroy((error) => {
+            if (error) {
+                console.error('Unable to clear the deleted user session:', error.code || error.message);
+                res.clearCookie('connect.sid');
+                return res.status(500).json({ error: 'Account deleted, but unable to clear the session.' });
+            }
+            res.clearCookie('connect.sid');
+            return res.json({ success: true });
+        });
+    } catch (error) {
+        console.error('Unable to delete user account:', error.code || error.message);
+        return res.status(500).json({ error: 'Unable to delete the account.' });
     }
 });
 

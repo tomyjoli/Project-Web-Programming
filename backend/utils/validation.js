@@ -6,7 +6,7 @@ function positiveInteger(value) {
 function validateRecipe(body) {
   const recipe = body && typeof body === 'object' ? body : {};
   const errors = [];
-  const requiredText = ['title', 'category', 'glass_name'];
+  const requiredText = ['title', 'category'];
 
   for (const field of requiredText) {
     if (typeof recipe[field] !== 'string' || !recipe[field].trim()) {
@@ -22,6 +22,9 @@ function validateRecipe(body) {
   }
   if (typeof recipe.category === 'string' && recipe.category.trim().length > 100) {
     errors.push('category must be 100 characters or fewer.');
+  }
+  if (recipe.glass_name != null && typeof recipe.glass_name !== 'string') {
+    errors.push('glass_name must be text.');
   }
   if (typeof recipe.glass_name === 'string' && recipe.glass_name.trim().length > 50) {
     errors.push('glass_name must be 50 characters or fewer.');
@@ -54,7 +57,12 @@ function validateRecipe(body) {
         || Number(recipe.preparation_time) > 2147483647)) {
     errors.push('preparation_time must be a positive number of seconds.');
   }
-  if (!positiveInteger(recipe.capacity_cl) || Number(recipe.capacity_cl) > 2147483647) {
+  const capacityIsUnset = recipe.capacity_cl == null
+    || recipe.capacity_cl === ''
+    || recipe.capacity_cl === 0
+    || recipe.capacity_cl === '0';
+  if (!capacityIsUnset
+      && (!positiveInteger(recipe.capacity_cl) || Number(recipe.capacity_cl) > 2147483647)) {
     errors.push('capacity_cl must be a positive integer.');
   }
   if (!Array.isArray(recipe.recipe_ingredients) || recipe.recipe_ingredients.length === 0) {
